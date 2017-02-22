@@ -1,0 +1,197 @@
+\documentcalss{article}
+\usepackage{hyperref}
+\usepackage[backend=bibtex, sorting=none]{biblatex}
+
+\begin{filecontents*}{references.bib}
+
+@article{deptEnergy,
+author = {U.S. Department of Energy}, title = {{Defense-Related Uranium Mines Report to Congress}}, month={August}, year={2014}, note = {\url{http://energy.gov/lm/downloads/defense-related-uranium-mines-reportcongress-august-2014}, Last Accessed: April 10, 2015},
+}
+
+
+
+@article{JAWR:JAWR365,
+author = {Tabios, Guillermo Q. and Salas, Jose D.},
+title = {A COMPARATIVE ANALYSIS OF TECHNIQUES FOR SPATIAL INTERPOLATION OF PRECIPITATION},
+journal = {JAWRA Journal of the American Water Resources Association},
+volume = {21},
+number = {3},
+publisher = {Blackwell Publishing Ltd},
+issn = {1752-1688},
+doi = {10.1111/j.1752-1688.1985.tb00147.x},
+pages = {365--380},
+keywords = {optimal interpolation, Kriging analysis, spatial estimation},
+year = {1985},
+howpublished = "\url{ http://dx.doi.org/10.1111/j.1752-1688.1985.tb00147.x }",
+}
+
+@article{hijmans2005very,
+title={Very high resolution interpolated climate surfaces for global land areas},
+author={Hijmans, Robert J. and Cameron, Susan E. and Parra, Juan L. and Jones, Peter G. and Jarvis, Andy},
+journal={International Journal of Climatology},
+volume={25},
+number={15},
+pages={1965--1978},
+year={2005},
+publisher={Wiley Online Library},
+howpublished = "\url{  http://onlinelibrary.wiley.com/store/10.1002/joc.1276/asset/1276_ftp.pdf;jsessionid=2B639FA256ADAD293DFD7C6E41ABE71C.f01t02?v=1&t=i8bqrnuz&s=18bd9a15fdbf0e25b7ea90997cb5b3f80a1c05de }",
+}
+
+
+
+@misc{galliumInfo,
+  author = {Mineral Resources Program},
+  title = {{Gallium- A Smart Metal}},
+year={2013},
+  howpublished = "\url{http://pubs.usgs.gov/fs/2013/3006/pdf/fs2013-3006.pdf}",
+  note={U.S. Geological Survey, Last Accessed: April 10, 2015}
+}
+
+
+
+
+
+@misc{typicalNonNormal,
+  author = {Gunter Sp\"{o}c, Hannes Kazianka, J\"{u}rgen Pilz},
+    title = {{Modeling and Interpolation of Non-Gaussian Spatial Data: A Comparative Study}},
+  howpublished = "\url{https://www.stat.aau.at/Tagungen/statgis/2009/StatGIS2009_Spoeck_2.pdf}",
+}
+
+@article{leaveOutliers,
+author={M.D. Cahn, J.W. Hummel, and B.H. Brouer},
+title={Spatial Analysis of Soil Fertility for Site-Specific Crop Management},
+journal={Soil Science Society of America Journal},
+year={1994},
+  howpublished = "\url{https://dl.sciencesocieties.org/publications/sssaj/abstracts/58/4/SS0580041240}",
+}
+
+@article{Drew197760,
+title = {{US Uranium Deposits: A Geostatistical Model}},
+journal = {Resources Policy },
+volume = {3},
+number = {1},
+pages = {60 - 70},
+year = {1977},
+author = {M.W. Drew},
+howpublished = "\url{http://www.sciencedirect.com/science/article/pii/0301420777900484}",
+}
+
+
+@article{shenghuan1988application,
+  title={Application of the geostatistical analyses to uranium geology},
+  author={Shenghuan, Tang and Yuxuan, Xue and Jinqing, Meng},
+  journal={Geological Data Integration Techniques},
+  pages={219},
+  year={1988},
+  howpublished = "\url{  http://www.iaea.org/inis/collection/NCLCollectionStore/_Public/20/011/20011421.pdf}",
+}
+
+@article{origins,
+year={1990},
+issn={0882-8121},
+journal={Mathematical Geology},
+volume={22},
+number={3},
+doi={10.1007/BF00889887},
+title={The origins of kriging},
+url={http://dx.doi.org/10.1007/BF00889887},
+publisher={Kluwer Academic Publishers-Plenum Publishers},
+keywords={blue; blup; covariance function; geodesy; homogeneous structure function; meteorology; mining; optimum interpolation; spatial blup; statistics; variogram},
+author={Cressie, Noel},
+pages={239-252},
+language={English},
+howpublished = "\url{http://link.springer.com/article/10.1007\%2FBF00889887#}",
+
+}
+
+@book{goovaerts1997geostatistics,
+  title={Geostatistics for natural resources evaluation},
+  author={Goovaerts, Pierre},
+  year={1997},
+  publisher={Oxford University Press},
+}
+
+@book{waller2004applied,
+  title={Applied spatial statistics for public health data},
+  author={Waller, Lance A and Gotway, Carol A},
+  volume={368},
+  year={2004},
+  publisher={John Wiley \& Sons},
+}
+
+@article{evans2013enabling,
+  title={{Enabling Spatial Big Data via CyberGIS: Challenges and Opportunities}},
+  author={Michael R. Evans and Dev Oliver and Kwang Soo Yang and Xun Zhou and Shashi Shekhar},
+  journal={CyberGIS: Fostering a New Wave of Geospatial Innovation and Discovery. Springer Book},
+  year={2013},
+  howpublished = "\url{http://www.spatial.cs.umn.edu/CyberGIS/cyberGISNew.pdf}",
+}
+
+@misc{invertComplexity,
+  author = {Kh.D. Ikramov},
+  month={February},
+  year={2007},
+  title = {{Inversion of a Matrix}},
+  journal={Encyclopedia of Mathematics},
+howpublished = "\url{http://www.encyclopediaofmath.org/index.php/Inversion_of_a_matrix}",
+note={Last Accessed: January 30, 2015}
+}
+
+
+@misc{coUraniumMines,
+  author = {U.S. Environmental Protection Agency Office of of Radiation and Indoor Air},
+  month={April},
+  year={2008},
+  title = {{Technical Report on Technologically Enhanced Naturally Occurring Radioactive Materials from Uranium Mining: Investigation of Potential Health, Geographic, And Environmental Issues of Abandoned Uranium Mines (Vol. 2)}},
+howpublished = "\url{http://www.epa.gov/radiation/docs/tenorm/402-r-08-005-volii/402-r-08-005-v2.pdf}",
+note={Last Accessed: April 1, 2015}
+}
+
+@article{skewWork,
+year={2011},
+issn={1866-6280},
+journal={Environmental Earth Sciences},
+volume={63},
+number={5},
+doi={10.1007/s12665-010-0784-z},
+title={Spatial interpolation of severely skewed data with several peak values by the approach integrating kriging and triangular irregular network interpolation},
+publisher={Springer-Verlag},
+keywords={Skewed data; High peak value; Data transformation; Triangular irregular network; Spatial distribution},
+author={Wu, Chunfa and Wu, Jiaping and Luo, Yongming and Zhang, Haibo and Teng, Ying and DeGloria, Stephen D.},
+pages={1093-1103},
+language={English},
+howpublished = "\url{http://dx.doi.org/10.1007/s12665-010-0784-z}",
+}
+
+@article{Kane1982117,
+title = {{Interpretation of regional geochemistry using optimal interpolation parameters}},
+journal = {Computers \& Geosciences},
+volume = {8},
+number = {2},
+pages = {117 - 135},
+year = {1982},
+author = {Victor E. Kane and Connie L. Begovich and Todd R. Butz and Donald E. Myers},
+howpublished = "\url{http://www.sciencedirect.com/science/article/pii/0098300482900164}",
+}
+
+@article{smallUraniumStudy,
+   author = {Hinojosa de la Garza, Octavio R. and Montero Cabrera, Maria Elena and Sanin, Luz H. and Reyes Cortes, Manuel and Martinez Meyer, Enrique},
+   title = {{Spatial analysis techniques applied to uranium prospecting in Chihuahua State, Mexico}},
+   journal = {AIP Conference Proceedings},
+   year = {2014},
+   volume = {1607},
+   pages = {116-122},
+   howpublished = "\url{http://scitation.aip.org/content/aip/proceeding/aipcp/10.1063/1.4890711}"
+
+}
+
+  @Manual{rLK,
+    title = {LatticeKrig: Multiresolution Kriging based on Markov random fields},
+    author = {Douglas Nychka and Dorit Hammerling and Stephan Sain and Nathan Lenssen},
+    year = {2014},
+    note = {R package version 3.4},
+    url = {http://CRAN.R-project.org/package=LatticeKrig},
+  }
+\end{filecontents*}
+
+
