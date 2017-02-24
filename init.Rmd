@@ -1,0 +1,82 @@
+---
+title: "init"
+author: "Weijia Zhang (Vega)"
+date: "February 24, 2017"
+output: html_document
+---
+
+#### Get Started
+```{r}
+library(etl)
+library(DBI)
+library(citibike)
+library(utils)
+library(data.table)
+library(lubridate)
+```
+
+
+#### Create a Local Directory and Connect to the Database
+```{r}
+# Connect to a remote database server
+db <- src_mysql( user = "wzhang", password = "PedalP0wer", dbname = "citibike", host ="scidb.smith.edu", port = 3306)
+# example local directory on desktop 
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", db = db)
+```
+
+#### Data
+Initialize the database using the schema
+```{r}
+etl_init(bikes)
+```
+Extract, transform and load the data up until 2016. One way is to break down the three steps.
+```{r}
+bikes <- bikes %>%
+  etl_extract(years = 2013:2016, months = 1:12) %>%
+  etl_transform(years = 2013:2016, months = 1:12) %>%
+  etl_load(years = 2013:2016, months = 1:12)
+```
+
+Or `etl_update` could be used to perform all three operations.
+```{r, eval = FALSE}
+bikes <- bikes %>%
+  etl_update(years= 2013: 2016, months = 1:12)
+```
+
+
+#### Verify
+There are 42 files starting from July 2017 to Dec 2016. The zip files are in the raw directory and the csv files are in the laod directory.
+```{r}
+summary(bikes)
+```
+
+The proccess takes some time. After all the data is loaded into the remote database, we could check the number of trips per month.
+
+```{r}
+trip_summary <- bikes %>%
+  tbl("trips") %>%
+  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time)) %>%
+  group_by(year, month) %>%
+  summarise(total = n())
+trip_summary
+```
+
+We could also check the files in both the `load` and `raw` folder under the local directory that we created before.
+
+Check the `load` folder
+```{bash}
+cd /Users/vegazhang/Desktop/citibike_data/load
+cksum *
+```
+
+
+Check the `raw` folder
+```{bash}
+cd /Users/vegazhang/Desktop/citibike_data/raw
+cksum *
+```
+
+
+
+
+
