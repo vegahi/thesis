@@ -1,0 +1,91 @@
+---
+title: "Summary_Statistics"
+author: "Weijia Zhang (Vega)"
+date: "2/26/2017"
+output: html_document
+---
+#### Summary Statistics
+
+```{r}
+library(etl)
+library(DBI)
+library(citibike)
+library(utils)
+library(data.table)
+library(lubridate)
+# database
+db <- src_mysql( user = "wzhang", password = "PedalP0wer", dbname = "citibike", host ="scidb.smith.edu", port = 3306)
+# example local directory on desktop 
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", db = db)
+```
+
+
+```{r}
+# if the data is not loaded, uncomment the following code
+#bikes <- bikes %>%
+#  etl_load(years = 2013:2016, months = 1:12)
+summary(bikes)
+# analysis by starttime
+trip_starttime<- bikes %>%
+  tbl("trips") %>%
+  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), day = DAY(Start_Time), hour = HOUR(Start_Time), minute = MINUTE(Start_Time)) 
+
+
+```
+
+#### Breakdown of usertype
+```{r}
+bikes %>%
+  tbl("trips") %>%
+  group_by(User_Type)%>%
+  summarise(count = n())
+  
+```
+
+#### Breakdown of gender
+```{r}
+bikes %>%
+  tbl("trips") %>%
+  group_by(Gender)%>%
+  summarise(count = n())
+```
+
+
+#### How many unique stations by start station?
+```{r}
+# by start station
+bikes %>%
+  tbl("trips") %>%
+  select(Start_Station_ID) %>%
+  distinct()
+```
+
+#### How many unique stations by end station?
+```{r}
+# by end station
+bikes %>%
+  tbl("trips") %>%
+  select(End_Station_ID) %>%
+  distinct()
+```
+
+
+#### What is the distribution of bike volume across stations?
+```{r}
+bikes %>%
+  tbl("trips") %>%
+  group_by(Start_Station_ID, End_Station_ID) %>%
+  summarise(trip_volume = n()) %>%
+  arrange(desc(trip_volume))
+
+```
+
+#### How many bikes per hour?
+```{r}
+bikes %>%
+  tbl("trips") %>%
+  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), day = DAY(Start_Time), hour = HOUR(Start_Time), minute = MINUTE(Start_Time)) 
+```
+
+#### Which station has the greatest imbalance?
+How many bikes per day?
