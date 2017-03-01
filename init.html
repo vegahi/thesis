@@ -126,235 +126,28 @@ $(document).ready(function () {
 
 <div id="get-started" class="section level4">
 <h4>Get Started</h4>
-<pre class="r"><code>library(etl)</code></pre>
-<pre><code>## Loading required package: dplyr</code></pre>
-<pre><code>## 
-## Attaching package: 'dplyr'</code></pre>
-<pre><code>## The following objects are masked from 'package:stats':
-## 
-##     filter, lag</code></pre>
-<pre><code>## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>library(DBI)
+<pre class="r"><code>library(etl)
+library(DBI)
 library(citibike)
 library(utils)
-library(data.table)</code></pre>
-<pre><code>## -------------------------------------------------------------------------</code></pre>
-<pre><code>## data.table + dplyr code now lives in dtplyr.
-## Please library(dtplyr)!</code></pre>
-<pre><code>## -------------------------------------------------------------------------</code></pre>
-<pre><code>## 
-## Attaching package: 'data.table'</code></pre>
-<pre><code>## The following objects are masked from 'package:dplyr':
-## 
-##     between, first, last</code></pre>
-<pre class="r"><code>library(lubridate)</code></pre>
-<pre><code>## 
-## Attaching package: 'lubridate'</code></pre>
-<pre><code>## The following objects are masked from 'package:data.table':
-## 
-##     hour, isoweek, mday, minute, month, quarter, second, wday,
-##     week, yday, year</code></pre>
-<pre><code>## The following object is masked from 'package:base':
-## 
-##     date</code></pre>
+library(data.table)
+library(lubridate)</code></pre>
 </div>
 <div id="create-a-local-directory-and-connect-to-the-database" class="section level4">
 <h4>Create a Local Directory and Connect to the Database</h4>
 <pre class="r"><code># Connect to a remote database server
-db &lt;- src_mysql( user = &quot;wzhang&quot;, password = &quot;PedalP0wer&quot;, dbname = &quot;citibike&quot;, host =&quot;scidb.smith.edu&quot;, port = 3306)
 # example local directory on desktop 
-bikes &lt;- etl(&quot;citibike&quot;, dir = &quot;~/Desktop/citibike_data&quot;, db = db)</code></pre>
+bikes &lt;- etl(&quot;citibike&quot;, dir = &quot;~/Desktop/citibike_data&quot;, db = src_mysql_cnf(&quot;citibike&quot;, groups = &quot;scidb&quot;))</code></pre>
 </div>
 <div id="data" class="section level4">
 <h4>Data</h4>
-<p>Initialize the database using the schema</p>
+<p>Initialize the database using the schema if needed. Note: Running this command will wipe out the entire database!</p>
 <pre class="r"><code>etl_init(bikes)</code></pre>
-<pre><code>## Loading SQL script at /Library/Frameworks/R.framework/Versions/3.3/Resources/library/citibike/sql/init.mysql</code></pre>
 <p>Extract, transform and load the data up until 2016. One way is to break down the three steps.</p>
 <pre class="r"><code>bikes &lt;- bikes %&gt;%
   etl_extract(years = 2013:2016, months = 1:12) %&gt;%
   etl_transform(years = 2013:2016, months = 1:12) %&gt;%
   etl_load(years = 2013:2016, months = 1:12)</code></pre>
-<pre><code>## Transforming raw data ...</code></pre>
-<pre><code>## 
-Read 16.6% of 843416 rows
-Read 48.6% of 843416 rows
-Read 74.7% of 843416 rows
-Read 843416 rows and 15 (of 15) columns from 0.153 GB file in 00:00:06
-## 
-Read 26.9% of 1001958 rows
-Read 64.9% of 1001958 rows
-Read 94.8% of 1001958 rows
-Read 1001958 rows and 15 (of 15) columns from 0.182 GB file in 00:00:05
-## 
-Read 21.3% of 1034359 rows
-Read 44.5% of 1034359 rows
-Read 64.8% of 1034359 rows
-Read 69.6% of 1034359 rows
-Read 96.7% of 1034359 rows
-Read 1034359 rows and 15 (of 15) columns from 0.188 GB file in 00:00:07
-## 
-Read 18.3% of 1037712 rows
-Read 59.7% of 1037712 rows
-Read 90.6% of 1037712 rows
-Read 1037712 rows and 15 (of 15) columns from 0.189 GB file in 00:00:05
-## 
-Read 57.7% of 675774 rows
-Read 675774 rows and 15 (of 15) columns from 0.123 GB file in 00:00:03
-## 
-Read 72.1% of 443966 rows
-Read 443966 rows and 15 (of 15) columns from 0.081 GB file in 00:00:03
-## 
-Read 70.6% of 439117 rows
-Read 439117 rows and 15 (of 15) columns from 0.080 GB file in 00:00:03
-## 
-Read 93.9% of 670780 rows
-Read 670780 rows and 15 (of 15) columns from 0.122 GB file in 00:00:03
-## 
-Read 34.6% of 866117 rows
-Read 86.6% of 866117 rows
-Read 866117 rows and 15 (of 15) columns from 0.158 GB file in 00:00:04
-## 
-Read 20.3% of 936880 rows
-Read 70.4% of 936880 rows
-Read 936880 rows and 15 (of 15) columns from 0.171 GB file in 00:00:04
-## 
-Read 31.0% of 968842 rows
-Read 79.5% of 968842 rows
-Read 968842 rows and 15 (of 15) columns from 0.176 GB file in 00:00:04
-## 
-Read 39.4% of 963489 rows
-Read 85.1% of 963489 rows
-Read 963489 rows and 15 (of 15) columns from 0.175 GB file in 00:00:04
-## 
-Read 30.4% of 953887 rows
-Read 78.6% of 953887 rows
-Read 953887 rows and 15 (of 15) columns from 0.171 GB file in 00:00:04
-## 
-Written 46.7% of 953887 rows in 2 secs using 1 thread. anyBufferGrown=no; maxBuffUsed=44%. Finished in 2 secs.      
-Written 98.3% of 953887 rows in 3 secs using 1 thread. anyBufferGrown=no; maxBuffUsed=44%. Finished in 0 secs.      
-                                                                                                                                     
-
-Read 39.8% of 828711 rows
-Read 73.6% of 828711 rows
-Read 828711 rows and 15 (of 15) columns from 0.150 GB file in 00:00:05
-## 
-Read 68.0% of 529188 rows
-Read 529188 rows and 15 (of 15) columns from 0.096 GB file in 00:00:03
-## 
-Read 97.7% of 399069 rows
-Read 399069 rows and 15 (of 15) columns from 0.072 GB file in 00:00:03
-## 
-Read 70.5% of 652390 rows
-Read 652390 rows and 15 (of 15) columns from 0.117 GB file in 00:00:03
-## 
-Read 23.9% of 961986 rows
-Read 55.1% of 961986 rows
-Read 88.4% of 961986 rows
-Read 961986 rows and 15 (of 15) columns from 0.173 GB file in 00:00:05
-## 
-Read 82.9% of 941219 rows
-Read 941219 rows and 15 (of 15) columns from 0.137 GB file in 00:00:03
-## 
-Read 23.0% of 1085676 rows
-Read 58.0% of 1085676 rows
-Read 91.2% of 1085676 rows
-Read 1085676 rows and 15 (of 15) columns from 0.195 GB file in 00:00:05
-## 
-Read 10.2% of 1179044 rows
-Read 32.2% of 1179044 rows
-Read 50.9% of 1179044 rows
-Read 72.9% of 1179044 rows
-Read 1179044 rows and 15 (of 15) columns from 0.212 GB file in 00:00:07
-## 
-Read 0.0% of 1289699 rows
-Read 42.6% of 1289699 rows
-Read 82.2% of 1289699 rows
-Read 1289699 rows and 15 (of 15) columns from 0.232 GB file in 00:00:06
-## 
-Read 2.5% of 1212277 rows
-Read 31.3% of 1212277 rows
-Read 61.9% of 1212277 rows
-Read 89.1% of 1212277 rows
-Read 1212277 rows and 15 (of 15) columns from 0.221 GB file in 00:00:06
-## 
-Read 13.2% of 987245 rows
-Read 66.9% of 987245 rows
-Read 987245 rows and 15 (of 15) columns from 0.180 GB file in 00:00:04
-## 
-Read 44.8% of 804125 rows
-Read 87.1% of 804125 rows
-Read 804125 rows and 15 (of 15) columns from 0.147 GB file in 00:00:04
-## 
-Read 98.1% of 509478 rows
-Read 509478 rows and 15 (of 15) columns from 0.092 GB file in 00:00:03
-## 
-Read 94.5% of 560874 rows
-Read 560874 rows and 15 (of 15) columns from 0.102 GB file in 00:00:03
-## 
-Read 47.8% of 919921 rows
-Read 88.1% of 919921 rows
-Read 919921 rows and 15 (of 15) columns from 0.167 GB file in 00:00:04
-## 
-Read 33.6% of 1013149 rows
-Read 69.1% of 1013149 rows
-Read 1013149 rows and 15 (of 15) columns from 0.184 GB file in 00:00:04
-## 
-Read 0.8% of 1212280 rows
-Read 36.3% of 1212280 rows
-Read 70.9% of 1212280 rows
-Read 1212280 rows and 15 (of 15) columns from 0.220 GB file in 00:00:05
-## 
-Read 0.0% of 1460318 rows
-Read 39.0% of 1460318 rows
-Read 74.0% of 1460318 rows
-Read 1460318 rows and 15 (of 15) columns from 0.265 GB file in 00:00:05
-## 
-Read 0.0% of 1380110 rows
-Read 24.6% of 1380110 rows
-Read 32.6% of 1380110 rows
-Read 67.4% of 1380110 rows
-Read 99.3% of 1380110 rows
-Read 1380110 rows and 15 (of 15) columns from 0.252 GB file in 00:00:07
-## 
-Read 0.0% of 1557663 rows
-Read 21.8% of 1557663 rows
-Read 43.7% of 1557663 rows
-Read 66.1% of 1557663 rows
-Read 86.7% of 1557663 rows
-Read 89.9% of 1557663 rows
-Read 1557663 rows and 15 (of 15) columns from 0.284 GB file in 00:00:09
-## 
-Read 0.0% of 1648856 rows
-Read 31.5% of 1648856 rows
-Read 61.3% of 1648856 rows
-Read 89.2% of 1648856 rows
-Read 1648856 rows and 15 (of 15) columns from 0.302 GB file in 00:00:08
-## 
-Written 38.0% of 1648856 rows in 2 secs using 1 thread. anyBufferGrown=no; maxBuffUsed=40%. Finished in 3 secs.      
-Written 67.1% of 1648856 rows in 3 secs using 1 thread. anyBufferGrown=no; maxBuffUsed=40%. Finished in 1 secs.      
-Written 92.4% of 1648856 rows in 4 secs using 1 thread. anyBufferGrown=no; maxBuffUsed=40%. Finished in 0 secs.      
-                                                                                                                                     
-
-Read 22.9% of 1573872 rows
-Read 54.6% of 1573872 rows
-Read 86.4% of 1573872 rows
-Read 98.5% of 1573872 rows
-Read 1573872 rows and 15 (of 15) columns from 0.247 GB file in 00:00:06
-## 
-Written 41.7% of 1573872 rows in 2 secs using 1 thread. anyBufferGrown=no; maxBuffUsed=40%. Finished in 2 secs.      
-Written 70.0% of 1573872 rows in 3 secs using 1 thread. anyBufferGrown=no; maxBuffUsed=40%. Finished in 1 secs.      
-Written 99.6% of 1573872 rows in 4 secs using 1 thread. anyBufferGrown=no; maxBuffUsed=40%. Finished in 0 secs.      
-                                                                                                                                     
-
-Read 51.8% of 1196942 rows
-Read 1196942 rows and 15 (of 15) columns from 0.188 GB file in 00:00:03
-## 
-Read 96.0% of 812192 rows
-Read 812192 rows and 15 (of 15) columns from 0.127 GB file in 00:00:03</code></pre>
-<pre><code>## Writing bike data to the database...</code></pre>
 <p>Or <code>etl_update</code> could be used to perform all three operations.</p>
 <pre class="r"><code>bikes &lt;- bikes %&gt;%
   etl_update(years= 2013: 2016, months = 1:12)</code></pre>
@@ -372,29 +165,57 @@ Read 812192 rows and 15 (of 15) columns from 0.127 GB file in 00:00:03</code></p
 ## info  8      -none-          list       
 ## disco 3      -none-          environment</code></pre>
 <p>The proccess takes some time. After all the data is loaded into the remote database, we could check the number of trips per month.</p>
-<pre class="r"><code>trip_summary &lt;- bikes %&gt;%
+<pre class="r"><code>summary_trip &lt;- bikes %&gt;%
   tbl(&quot;trips&quot;) %&gt;%
   mutate(year = YEAR(Start_Time), month = MONTH(Start_Time)) %&gt;%
   group_by(year, month) %&gt;%
-  summarise(total = n())
-trip_summary</code></pre>
-<pre><code>## Source:   query [?? x 3]
-## Database: mysql 5.5.47-0ubuntu0.14.04.1 [wzhang@scidb.smith.edu:/citibike]
-## Groups: year
-## 
-##     year month   total
-##    &lt;int&gt; &lt;int&gt;   &lt;dbl&gt;
-## 1   2013     7  843416
-## 2   2013     8 1001958
-## 3   2013     9 1034359
-## 4   2013    10 1037712
-## 5   2013    11  675774
-## 6   2013    12  443966
-## 7   2014     1  300400
-## 8   2014     2  224736
-## 9   2014     3  439117
-## 10  2014     4  670780
-## # ... with more rows</code></pre>
+  summarise(total = n()) %&gt;%
+  collect()</code></pre>
+<pre class="r"><code># the trip distribution
+as.data.frame(summary_trip)</code></pre>
+<pre><code>##    year month   total
+## 1  2013     7  843416
+## 2  2013     8 1001958
+## 3  2013     9 1034359
+## 4  2013    10 1037712
+## 5  2013    11  675774
+## 6  2013    12  443966
+## 7  2014     1  300400
+## 8  2014     2  224736
+## 9  2014     3  439117
+## 10 2014     4  670780
+## 11 2014     5  866117
+## 12 2014     6  936880
+## 13 2014     7  968842
+## 14 2014     8  963489
+## 15 2014     9  953887
+## 16 2014    10  828711
+## 17 2014    11  529188
+## 18 2014    12  399069
+## 19 2015     1  285552
+## 20 2015     2  196930
+## 21 2015     3  341826
+## 22 2015     4  652390
+## 23 2015     5  961986
+## 24 2015     6  941219
+## 25 2015     7 1085676
+## 26 2015     8 1179044
+## 27 2015     9 1289699
+## 28 2015    10 1212277
+## 29 2015    11  987245
+## 30 2015    12  804125
+## 31 2016     1  509478
+## 32 2016     2  560874
+## 33 2016     3  919921
+## 34 2016     4 1013149
+## 35 2016     5 1212280
+## 36 2016     6 1460318
+## 37 2016     7 1380110
+## 38 2016     8 1557663
+## 39 2016     9 1648856
+## 40 2016    10 1573872
+## 41 2016    11 1196942
+## 42 2016    12  812192</code></pre>
 <p>We could also check the files in both the <code>load</code> and <code>raw</code> folder under the local directory that we created before.</p>
 <p>Check the <code>load</code> folder</p>
 <pre class="bash"><code>cd /Users/vegazhang/Desktop/citibike_data/load

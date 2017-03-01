@@ -6,7 +6,7 @@ output: html_document
 ---
 
 #### Get Started
-```{r}
+```{r, message= FALSE, warning= FALSE}
 library(etl)
 library(DBI)
 library(citibike)
@@ -19,18 +19,19 @@ library(lubridate)
 #### Create a Local Directory and Connect to the Database
 ```{r}
 # Connect to a remote database server
-db <- src_mysql( user = "wzhang", password = "PedalP0wer", dbname = "citibike", host ="scidb.smith.edu", port = 3306)
 # example local directory on desktop 
-bikes <- etl("citibike", dir = "~/Desktop/citibike_data", db = db)
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", db = src_mysql_cnf("citibike", groups = "scidb"))
+
 ```
 
 #### Data
-Initialize the database using the schema
-```{r}
+Initialize the database using the schema if needed. Note: Running this command will wipe out the entire database!
+```{r, eval = FALSE}
 etl_init(bikes)
 ```
+
 Extract, transform and load the data up until 2016. One way is to break down the three steps.
-```{r}
+```{r, eval = FALSE}
 bikes <- bikes %>%
   etl_extract(years = 2013:2016, months = 1:12) %>%
   etl_transform(years = 2013:2016, months = 1:12) %>%
@@ -53,12 +54,17 @@ summary(bikes)
 The proccess takes some time. After all the data is loaded into the remote database, we could check the number of trips per month.
 
 ```{r}
-trip_summary <- bikes %>%
+summary_trip <- bikes %>%
   tbl("trips") %>%
   mutate(year = YEAR(Start_Time), month = MONTH(Start_Time)) %>%
   group_by(year, month) %>%
-  summarise(total = n())
-trip_summary
+  summarise(total = n()) %>%
+  collect()
+```
+
+```{r}
+# the trip distribution
+as.data.frame(summary_trip)
 ```
 
 We could also check the files in both the `load` and `raw` folder under the local directory that we created before.
