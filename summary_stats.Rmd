@@ -6,17 +6,17 @@ output: html_document
 ---
 #### Summary Statistics
 
-```{r}
+```{r, message = FALSE, warning= FALSE}
 library(etl)
 library(DBI)
 library(citibike)
 library(utils)
 library(data.table)
 library(lubridate)
+library(ggplot2)
 # database
-db <- src_mysql( user = "wzhang", password = "PedalP0wer", dbname = "citibike", host ="scidb.smith.edu", port = 3306)
 # example local directory on desktop 
-bikes <- etl("citibike", dir = "~/Desktop/citibike_data", db = db)
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", db = src_mysql_cnf("citibike", groups = "scidb"))
 ```
 
 
@@ -27,7 +27,7 @@ bikes <- etl("citibike", dir = "~/Desktop/citibike_data", db = db)
 summary(bikes)
 # analysis by starttime
 trip_starttime<- bikes %>%
-  tbl("trips") %>%
+  tbl("trips_sub") %>%
   mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), day = DAY(Start_Time), hour = HOUR(Start_Time), minute = MINUTE(Start_Time)) 
 
 
@@ -51,41 +51,104 @@ bikes %>%
 ```
 
 
-#### How many unique stations by start station?
+#### How the start stations are being used?
 ```{r}
 # by start station
-bikes %>%
-  tbl("trips") %>%
-  select(Start_Station_ID) %>%
-  distinct()
+start_station_use <- bikes %>%
+  tbl("trips_sub") %>%
+  group_by(Start_Station_ID) %>%
+  summarise(num_use = n()) %>%
+  collect()
 ```
 
 #### How many unique stations by end station?
 ```{r}
-# by end station
-bikes %>%
-  tbl("trips") %>%
-  select(End_Station_ID) %>%
-  distinct()
+o
 ```
+
+#### What's the use distribution of different stations in general?
+with all the data including round trips
+```{r}
+colnames(start_station_use)[1] <- "ID"
+colnames(end_station_use)[1] <- "ID"
+total_station_use <- full_join(start_station_use, end_station_use, by = "ID")
+colnames(total_station_use)[2] <- "start_use"
+colnames(total_station_use)[3] <- "end_use"
+# replace NAs with 0
+total_station_use[is.na(total_station_use)] <- 0
+ggplot(data = total_station_use) + geom_point(aes(x = start_use, y = end_use, group = ID))+ geom_abline(intercept = 0, slope = 1, color = "Red")
+
+```
+
 
 
 #### What is the distribution of bike volume across stations?
 ```{r}
-bikes %>%
-  tbl("trips") %>%
+trip_volumne <- bikes %>%
+  tbl("trips_sub") %>%
   group_by(Start_Station_ID, End_Station_ID) %>%
   summarise(trip_volume = n()) %>%
-  arrange(desc(trip_volume))
+  arrange(desc(trip_volume)) %>%
+  collect(n = Inf)
+nrow(trip_volumne)
+# get the round trip stations
+trip_round <- trip_volumne %>%
+  filter(Start_Station_ID == End_Station_ID) %>%
+  select(Start_Station_ID, trip_volume)
+colnames(trip_round)[1] <- "Round_ID"
+# two way trips only
+trip_twoway <- left_join(total_station_use, trip_round, by= c("ID" = "Round_ID"))
+# replace NAs with 0
+trip_twoway[is.na(trip_twoway)] <- 0
+trip_twoway <- trip_twoway %>%
+  mutate(start_use = start_use - trip_volume) %>%
+  mutate(end_use = end_use - trip_volume)
+ggplot(data = trip_twoway) + geom_point(aes(x = start_use, y = end_use, group = ID))+ geom_abline(intercept = 0, slope = 1, color = "Red")
 
+
+
+# plot the trip volume distribution
+boxplot(trip_volumne$trip_volume)
+plot(density(trip_volumne$trip_volume))
+# take out the outlier
+plot(density(trip_volumne[-1,]$trip_volume))
+boxplot(trip_volumne[-1,]$trip_volume)
 ```
 
-#### How many bikes per hour?
+
+#### Trip distribution per year
 ```{r}
-bikes %>%
+trip_vol_year <- bikes %>%
   tbl("trips") %>%
-  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), day = DAY(Start_Time), hour = HOUR(Start_Time), minute = MINUTE(Start_Time)) 
+  mutate(year = YEAR(Start_Time)) %>%
+  group_by(year) %>%
+  summarise(total_trip = n()) %>%
+  collect()
+ggplot(data = trip_vol_year, aes(year,total_trip))+ geom_bar(stat = "identity", fill ="Light Blue")
 ```
 
-#### Which station has the greatest imbalance?
-How many bikes per day?
+#### Trip distribution per month
+```{r}
+trip_vol_month <- bikes %>%
+  tbl("trips") %>%
+  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time)) %>%
+  group_by(year, month) %>%
+  summarise(total_trip = n()) %>%
+  collect()
+
+ggplot(data = trip_vol_month, aes(month,total_trip))+ geom_line(color ="Light Blue") + facet_wrap(~ year)
+
+```
+
+#### Trip distribution per day
+```{r}
+trip_vol_day <- bikes %>%
+  tbl("trips") %>%
+  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), day = DAY(Start_Time)) %>%
+  group_by(year, month, day) %>%
+  summarise(total_trip = n()) %>%
+  collect()
+ggplot(data = trip_vol_day, aes(day,total_trip))+ geom_line(color ="Light Blue") + facet_grid(month~ year)
+```
+
+
