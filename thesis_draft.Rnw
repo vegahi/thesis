@@ -1,0 +1,164 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+
+
+\setlength{\textheight}{9.0in}
+\setlength{\topmargin}{0.0in}
+\setlength{\headheight}{0.3in}
+\setlength{\headsep}{0.4in}
+\setlength{\textwidth}{6.5in}
+\setlength{\oddsidemargin}{0in}
+\pagestyle{fancy}
+\fancyfoot{}
+\fancyhead{}
+\fancyhf{} % Clear all fields
+\renewcommand{\headrule}{}
+\renewcommand{\footrule}{}
+  
+ \usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+  %\usepackage{natbib}
+  \usepackage{float}
+  \usepackage{hyperref}
+  \usepackage{pdflscape}
+  \usepackage{setspace}
+% Headers and footers personalization using the `fancyhdr' package
+
+\fancyhead[R]{Page \thepage \hspace{1pt}  of %\pageref{LastPage}
+}
+\usepackage{soul,xspace}
+\newcommand{\R}{{\sf R}\xspace}
+
+\title{title}
+\author{author}
+
+\begin{document}
+%\bibliographystyle{plain}
+
+<<setup, include=FALSE, cache=FALSE, echo=FALSE>>=
+setwd("~/Documents/Spring2017/Thesis/thesis")
+Sys.setenv(TEXINPUTS=getwd(),
+           BIBINPUTS=getwd(),
+           BSTINPUTS=getwd())
+
+@
+
+
+%%%%%%%%%%%%%%%%SUMMARY SHEET%%%%%%%%%%%%%%%%%%%%%%%%
+\thispagestyle{empty}
+\setcounter{page}{0}
+\begin{center}
+\begin{minipage}{0.75\linewidth}
+    \centering
+%University logo
+    %\includegraphics[width=0.3\linewidth]{logo.pdf}
+   % \rule{0.4\linewidth}{0.15\linewidth}\par
+    \vspace{1cm}
+%Thesis title
+    {\uppercase{\Large Title\par}}
+    \vspace{3cm}
+%Author's name
+    {\Large Name \par}
+    \vspace{3cm}
+%Degree
+    {\Large Submitted to the Department of Mathematica and Statistics of Smith College\par}
+    \vspace{3cm}
+    %Advisor
+     {\Large Ben Baumer,  Honors Thesis Advisor\par}
+    \vspace{3cm}
+%Date
+    {\Large April 2015}
+\end{minipage}
+\end{center}
+\clearpage
+ 
+\section*{Acknowledgements}
+\thispagestyle{empty}
+
+
+
+\clearpage
+
+\section*{Abstract}
+\thispagestyle{empty}
+
+
+
+\clearpage
+
+
+
+
+%%%%%%%%%%%%%% CONTENTS %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\setcounter{page}{0}
+\small
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%% MAIN PAPER %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+
+\section{Introduction} \label{sec:intro}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Motivation} \label{sec:motivation}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Data}
+
+
+
+\subsection{}
+
+\section{Methods Overview}
+
+\section{Literature Review}
+\begin{itemize}
+  \item \href{https://pdfs.semanticscholar.org/c2a1/f8b4f98befd2749acd1260313a7317c987b1.pdf}{Data Analysis and Optimization for (Citi) Bike Sharing}\cite{o2015data}
+  
+  \item \href{https://ecommons.cornell.edu/handle/1813/40922}{Smarter Tools For (Citi)Bike Sharing} \cite{o2015smarter}
+  
+  \item \href{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.720.4385&rep=rep1&type=pdf}{Predicting bike usage for new york city's bike sharing system}\cite{singhvi2015predicting}
+  
+  \item \href{https://arxiv.org/abs/1312.3971}{Balancing bike sharing systems (BBSS): instance generation from the CitiBike NYC data}\cite{urli2013balancing}
+  
+  \item \href{http://www.sciencedirect.com/science/article/pii/S0966692316303143}{Incorporating the impact of spatio-temporal interactions on bicycle sharing system demand: A case study of New York CitiBike system}\cite{faghih2016incorporating}
+  
+  \item \href{http://nacto.org/wp-content/uploads/2015/07/2014_Gordon-Koven-and-Levenson_Citi-Bike-Takes-New-York.pdf}{Citi Bike Takes New York}\cite{gordon2014citi}
+  
+  \item \href{https://trid.trb.org/view.aspx?id=1359993}{Citi Bike: The First Two Years}\cite{kaufman2015citi}
+
+  \item \href{http://arrow.dit.ie/scschcomdis/79/}{Forecasting Bike Rental Demand Using New York Citi Bike Data}\cite{wang2016forecasting}
+  
+  \item \href{https://run.unl.pt/handle/10362/17842}{Rebalancing citi bike : a geospatial analysis of bike share redistribution in New York City}\cite{tedeschi2016rebalancing}
+\end{itemize}
+
+
+\nocite{hijmans2005very}
+
+\subsection{}
+
+\section{Results}
+
+
+
+
+\section{Conclusions and Future Work}
+
+
+%\clearpage
+
+
+
+\bibliographystyle{plain}
+\bibliography{references}
+%\bibliographystyle{DeGruyter}
+
+
+\end{document}
