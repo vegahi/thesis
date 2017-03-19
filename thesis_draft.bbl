@@ -1,0 +1,53 @@
+\begin{thebibliography}{1}
+
+\bibitem{faghih2016incorporating}
+Ahmadreza Faghih-Imani and Naveen Eluru.
+\newblock Incorporating the impact of spatio-temporal interactions on bicycle
+  sharing system demand: A case study of new york citibike system.
+\newblock {\em Journal of Transport Geography}, 54:218--227, 2016.
+
+\bibitem{gordon2014citi}
+Lily Gordon-Koven and Nolan Levenson.
+\newblock Citi bike takes new york.
+\newblock {\em Rudin Center for Transportation Management and Policy}, 2014.
+
+\bibitem{kaufman2015citi}
+Sarah~M Kaufman, Lily Gordon-Koven, Nolan Levenson, and Mitchell~L Moss.
+\newblock Citi bike: The first two years.
+\newblock 2015.
+
+\bibitem{o2015data}
+Eoin O'Mahony and David~B Shmoys.
+\newblock Data analysis and optimization for (citi) bike sharing.
+\newblock In {\em AAAI}, pages 687--694, 2015.
+
+\bibitem{o2015smarter}
+Eoin~Daniel O’Mahony.
+\newblock {\em Smarter tools for (Citi) bike sharing}.
+\newblock PhD thesis, Cornell University, 2015.
+
+\bibitem{singhvi2015predicting}
+Divya Singhvi, Somya Singhvi, Peter~I Frazier, Shane~G Henderson, Eoin
+  O’Mahony, David~B Shmoys, and Dawn~B Woodard.
+\newblock Predicting bike usage for new york city’s bike sharing system.
+\newblock In {\em AAAI 2015 Workshop on Computational Sustainability}.
+  Citeseer, 2015.
+
+\bibitem{tedeschi2016rebalancing}
+Alexander Tedeschi.
+\newblock {\em Rebalancing citi bike: a geospatial analysis of bike share
+  redistribution in New York City}.
+\newblock PhD thesis, 2016.
+
+\bibitem{urli2013balancing}
+Tommaso Urli.
+\newblock Balancing bike sharing systems (bbss): instance generation from the
+  citibike nyc data.
+\newblock {\em arXiv preprint arXiv:1312.3971}, 2013.
+
+\bibitem{wang2016forecasting}
+Wen Wang.
+\newblock Forecasting bike rental demand using new york citi bike data.
+\newblock 2016.
+
+\end{thebibliography}

@@ -61,7 +61,7 @@ Sys.setenv(TEXINPUTS=getwd(),
     {\uppercase{\Large Title\par}}
     \vspace{3cm}
 %Author's name
-    {\Large Name \par}
+    {\Large Weijia Zhang (Vega) \par}
     \vspace{3cm}
 %Degree
     {\Large Submitted to the Department of Mathematica and Statistics of Smith College\par}
@@ -103,22 +103,15 @@ Sys.setenv(TEXINPUTS=getwd(),
 
 \section{Introduction} \label{sec:intro}
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Motivation} \label{sec:motivation}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\section{Literature Review} \label{sec:literature review}
 
-\section{Data}
-
-
-
-\subsection{}
-
-\section{Methods Overview}
-
-\section{Literature Review}
 \begin{itemize}
   \item \href{https://pdfs.semanticscholar.org/c2a1/f8b4f98befd2749acd1260313a7317c987b1.pdf}{Data Analysis and Optimization for (Citi) Bike Sharing}\cite{o2015data}
   
@@ -140,16 +133,209 @@ Sys.setenv(TEXINPUTS=getwd(),
 \end{itemize}
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{My Contribution} \label{sec:my contribution}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Citi Bike and Package} \label{sec:citibike and package}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Shiny App} \label{sec:shiny}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Modeling} \label{sec:modeling}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Conclusion} \label{sec:conclusion}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Appendix} \label{sec:appendix}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsection{Summary Statistics}
+All the analysis are based on the data up until 2016 December.
+
+Connect to the remote SQL database on the Smith server and set up a local directory.
+<<message = FALSE, warning = FALSE>>=
+library(etl)
+library(DBI)
+library(citibike)
+library(utils)
+library(data.table)
+library(lubridate)
+library(ggplot2)
+library(tidyr)
+# example local directory on desktop 
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", 
+             db = src_mysql_cnf("citibike", groups = "scidb"))
+@
+
+15 variables are extracted from the original data and the last variable weekday is added to indicate if the start time is in weekday or not.
+
+<<>>=
+bikes %>%
+  tbl("trips") %>%
+  head(n = 2) 
+@
+
+Trips:
+See the distribution of bike volume across stations: the top ones are round trips around Central Park.
+<<>>=
+bikes %>%
+  tbl("trips") %>%
+  group_by(Start_Station_ID, End_Station_ID) %>%
+  summarise(trip_volume = n()) %>%
+  arrange(desc(trip_volume))
+@
+
+The trip distribution per year by start time: the usage has been increasing since 2013.
+<<>>=
+trip_vol_year <- bikes %>%
+  tbl("trips") %>%
+  mutate(year = YEAR(Start_Time)) %>%
+  group_by(year) %>%
+  summarise(total_trip = n()) %>%
+  collect()
+ggplot(data = trip_vol_year, aes(year,total_trip))+ geom_bar(stat = "identity", fill ="Light Blue")
+@
+
+The monthly pattern is similar across different years.
+<<>>=
+trip_vol_month <- bikes %>%
+  tbl("trips") %>%
+  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time)) %>%
+  group_by(year, month) %>%
+  summarise(total_trip = n()) %>%
+  collect()
+ggplot(data = trip_vol_month, aes(month,total_trip))+ geom_line(color ="Light Blue") + facet_wrap(~ year)
+@
+
+The daily usage:
+<<>>=
+trip_vol_day <- bikes %>%
+  tbl("trips") %>%
+  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), day = DAY(Start_Time)) %>%
+  group_by(year, month, day) %>%
+  summarise(total_trip = n()) %>%
+  collect()
+ggplot(data = trip_vol_day, aes(day,total_trip))+ geom_line(color ="Light Blue") + facet_grid(month~ year)
+@
+
+
+Stations:
+Based on the station ids and the trip information, there are 662 start stations and 689 end stations.
+<<>>=
+bikes %>%
+  tbl("trips") %>%
+  select(Start_Station_ID) %>%
+  distinct() %>%
+  summarise(count = n())
+bikes %>%
+  tbl("trips") %>%
+  select(End_Station_ID) %>%
+  distinct() %>%
+  summarise(count = n())
+@
+
+
+Combining the usage of the start stations and end stations, we could see that the stations with smaller id numbers have been used more heavily compared to those with big ones.
+<<warning = FALSE>>=
+stations_use <- bind_rows(
+bikes %>%
+  tbl("trips") %>%
+  select(Start_Station_ID) %>%
+  group_by(Start_Station_ID) %>%
+  summarise(count = n()) %>%
+  collect(n = Inf),
+bikes %>%
+  tbl("trips") %>%
+  select(End_Station_ID) %>%
+  group_by(End_Station_ID) %>%
+  summarise(count = n()) %>%
+  collect(n = Inf)
+)
+stations_use <- stations_use %>%
+  gather(key = type, value = station_id, -count) %>%
+  select(count, station_id)
+ggplot(data = stations_use, aes(x = station_id, y = count)) + geom_bar(stat = "identity")
+
+@
+
+
+Bike ID:
+Bikes are numbered from 14530 to 27340. However, not all numbers are used and there are 11887 bikes in total. The distribution shows us that for bikes with id number above 20000, their usage is not as much as those below 20000.
+<<>>=
+bike_id <- bikes %>%
+  tbl("trips") %>%
+  select(Bike_ID) %>%
+  group_by(Bike_ID) %>%
+  summarise(count = n()) %>%
+  collect(n = Inf)
+nrow(bike_id)
+summary(bike_id$Bike_ID)
+ggplot(data = bike_id, aes(x = Bike_ID, y = count)) + geom_bar(stat = "identity") 
+@
+
+
+User Type:
+Breaking down the user type information, we could see that most of the information is available. Among that, 0.12 are customers who have 24-hour pass or 7-day pass and 0.88 are subscribers who are annual members.
+<<>>=
+bikes %>%
+  tbl("trips") %>%
+  select(User_Type)%>%
+  group_by(User_Type)%>%
+  summarise(count = n())
+@
+
+
+Birth Year:
+Sum all, there are 1247644 missing variables and 3111175 of the trips have user birth year recorded as 0. The range of the birth year is from 1925 to 2000.
+<<>>=
+birth_year <- bikes %>%
+  tbl("trips") %>%
+  select(Birth_Year) %>%
+  group_by(Birth_Year)%>%
+  summarise(count = n()) %>%
+  collect(n = Inf)
+head(birth_year)
+summary(birth_year)
+@
+
+Remove the 0s and NAs to plot the user birth year distribution, we could se  most of the majority of users are born after 1975.
+
+<<>>=
+birth_year <- birth_year[3:nrow(birth_year),]
+ggplot(data = birth_year, aes(x = Birth_Year, y = count)) + geom_bar(stat = "identity") 
+@
+
+
+For the gender column (Zero=unknown; 1=male; 2=female), around 0.12 of the users are unknown, 0.67 of the users are male and 0.21 are female.
+
+<<>>=
+bikes %>%
+  tbl("trips") %>%
+  select(Gender) %>%
+  group_by(Gender)%>%
+  summarise(count = n())
+@
+
+
+
+
+
+
+
+
 \nocite{hijmans2005very}
-
-\subsection{}
-
-\section{Results}
-
-
-
-
-\section{Conclusions and Future Work}
 
 
 %\clearpage
