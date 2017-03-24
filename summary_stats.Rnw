@@ -1,0 +1,75 @@
+
+\subsection{Summary Statistics about Trips}
+
+All the analysis are based on the data up until 2016 December.
+
+Connect to the remote SQL database on the Smith server and set up a local directory.
+<<message = FALSE, warning = FALSE>>=
+library(etl)
+library(DBI)
+library(citibike)
+library(utils)
+library(data.table)
+library(lubridate)
+library(ggplot2)
+library(tidyr)
+# example local directory on desktop 
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", 
+             db = src_mysql_cnf("citibike", groups = "scidb"))
+@
+
+15 variables are extracted from the original data and the last variable weekday is added to indicate if the start time is in weekday or not.
+
+<<>>=
+bikes %>%
+  tbl("trips") %>%
+  head(n = 2) 
+@
+
+Trips:
+See the distribution of bike volume across stations: the top ones are round trips around Central Park.
+<<>>=
+bikes %>%
+  tbl("trips") %>%
+  group_by(Start_Station_ID, End_Station_ID) %>%
+  summarise(trip_volume = n()) %>%
+  arrange(desc(trip_volume))
+@
+
+The trip distribution per year by start time: the usage has been increasing since 2013.
+<<>>=
+trip_vol_year <- bikes %>%
+  tbl("trips") %>%
+  mutate(year = YEAR(Start_Time)) %>%
+  group_by(year) %>%
+  summarise(total_trip = n()) %>%
+  collect()
+ggplot(data = trip_vol_year, aes(year,total_trip)) +
+  geom_bar(stat = "identity", fill ="Light Blue")
+@
+
+The monthly pattern is similar across different years.
+<<>>=
+trip_vol_month <- bikes %>%
+  tbl("trips") %>%
+  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time)) %>%
+  group_by(year, month) %>%
+  summarise(total_trip = n()) %>%
+  collect()
+ggplot(data = trip_vol_month, aes(month,total_trip)) + 
+  geom_line(color ="Light Blue") + facet_wrap(~ year)
+@
+
+The daily usage:
+<<>>=
+trip_vol_day <- bikes %>%
+  tbl("trips") %>%
+  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), day = DAY(Start_Time)) %>%
+  group_by(year, month, day) %>%
+  summarise(total_trip = n()) %>%
+  collect()
+ggplot(data = trip_vol_day, aes(day,total_trip)) + 
+  geom_line(color ="Light Blue") + facet_grid(month~ year)
+@
+
+

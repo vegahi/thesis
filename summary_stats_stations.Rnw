@@ -1,0 +1,58 @@
+\subsection{Summary Statistics about Stations}
+All the analysis are based on the data up until 2016 December.
+
+Connect to the remote SQL database on the Smith server and set up a local directory.
+<<message = FALSE, warning = FALSE>>=
+library(etl)
+library(DBI)
+library(citibike)
+library(utils)
+library(data.table)
+library(lubridate)
+library(ggplot2)
+library(tidyr)
+# example local directory on desktop 
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", 
+             db = src_mysql_cnf("citibike", groups = "scidb"))
+@
+
+Stations:
+Based on the station ids and the trip information, there are 662 start stations and 689 end stations.
+<<>>=
+bikes %>%
+  tbl("trips") %>%
+  select(Start_Station_ID) %>%
+  distinct() %>%
+  summarise(count = n())
+bikes %>%
+  tbl("trips") %>%
+  select(End_Station_ID) %>%
+  distinct() %>%
+  summarise(count = n())
+@
+
+
+Combining the usage of the start stations and end stations, we could see that the stations with smaller id numbers have been used more heavily compared to those with big ones.
+<<warning = FALSE>>=
+stations_use <- bind_rows(
+bikes %>%
+  tbl("trips") %>%
+  select(Start_Station_ID) %>%
+  group_by(Start_Station_ID) %>%
+  summarise(count = n()) %>%
+  collect(n = Inf),
+bikes %>%
+  tbl("trips") %>%
+  select(End_Station_ID) %>%
+  group_by(End_Station_ID) %>%
+  summarise(count = n()) %>%
+  collect(n = Inf)
+)
+stations_use <- stations_use %>%
+  gather(key = type, value = station_id, -count) %>%
+  select(count, station_id)
+ggplot(data = stations_use, aes(x = station_id, y = count)) 
++ geom_bar(stat = "identity")
+
+@
+

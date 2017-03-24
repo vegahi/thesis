@@ -1,0 +1,81 @@
+\subsection{Summary Statistics Others}
+All the analysis are based on the data up until 2016 December.
+
+Connect to the remote SQL database on the Smith server and set up a local directory.
+<<message = FALSE, warning = FALSE>>=
+library(etl)
+library(DBI)
+library(citibike)
+library(utils)
+library(data.table)
+library(lubridate)
+library(ggplot2)
+library(tidyr)
+# example local directory on desktop 
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", 
+             db = src_mysql_cnf("citibike", groups = "scidb"))
+@
+
+
+Bike ID:
+
+Bikes are numbered from 14530 to 27340. However, not all numbers are used and there are 11887 bikes in total. The distribution shows us that for bikes with id number above 20000, their usage is not as much as those below 20000.
+<<>>=
+bike_id <- bikes %>%
+  tbl("trips") %>%
+  select(Bike_ID) %>%
+  group_by(Bike_ID) %>%
+  summarise(count = n()) %>%
+  collect(n = Inf)
+nrow(bike_id)
+summary(bike_id$Bike_ID)
+ggplot(data = bike_id, aes(x = Bike_ID, y = count)) +geom_bar(stat = "identity")
+
+@
+
+
+User Type:
+
+Breaking down the user type information, we could see that most of the information is available. Among that, 0.12 are customers who have 24-hour pass or 7-day pass and 0.88 are subscribers who are annual members.
+<<>>=
+bikes %>%
+  tbl("trips") %>%
+  select(User_Type)%>%
+  group_by(User_Type)%>%
+  summarise(count = n())
+@
+
+
+Birth Year:
+
+Sum all, there are 1247644 missing variables and 3111175 of the trips have user birth year recorded as 0. The range of the birth year is from 1925 to 2000.
+<<>>=
+birth_year <- bikes %>%
+  tbl("trips") %>%
+  select(Birth_Year) %>%
+  group_by(Birth_Year)%>%
+  summarise(count = n()) %>%
+  collect(n = Inf)
+head(birth_year)
+summary(birth_year)
+@
+
+Remove the 0s and NAs to plot the user birth year distribution, we could se  most of the majority of users are born after 1975.
+
+<<>>=
+birth_year <- birth_year[3:nrow(birth_year),]
+ggplot(data = birth_year, aes(x = Birth_Year, y = count))+geom_bar(stat = "identity")
+@
+
+
+For the gender column (Zero=unknown; 1=male; 2=female), around 0.12 of the users are unknown, 0.67 of the users are male and 0.21 are female.
+
+<<>>=
+bikes %>%
+  tbl("trips") %>%
+  select(Gender) %>%
+  group_by(Gender)%>%
+  summarise(count = n())
+@
+
+
