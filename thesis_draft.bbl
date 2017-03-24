@@ -1,4 +1,14 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
+
+\bibitem{googleCitiBikeStats}
+Citi bike stats.
+
+\bibitem{baumer2014r}
+Ben Baumer, Mine Cetinkaya-Rundel, Andrew Bray, Linda Loi, and Nicholas~J
+  Horton.
+\newblock R markdown: Integrating a reproducible analysis tool into
+  introductory statistics.
+\newblock {\em arXiv preprint arXiv:1402.1894}, 2014.
 
 \bibitem{faghih2016incorporating}
 Ahmadreza Faghih-Imani and Naveen Eluru.
@@ -26,6 +36,11 @@ Eoin~Daniel O’Mahony.
 \newblock {\em Smarter tools for (Citi) bike sharing}.
 \newblock PhD thesis, Cornell University, 2015.
 
+\bibitem{schneider_2016}
+Todd Schneider.
+\newblock A tale of twenty-two million citi bike rides: Analyzing the nyc bike
+  share system, Jan 2016.
+
 \bibitem{singhvi2015predicting}
 Divya Singhvi, Somya Singhvi, Peter~I Frazier, Shane~G Henderson, Eoin
   O’Mahony, David~B Shmoys, and Dawn~B Woodard.
@@ -39,6 +54,14 @@ Alexander Tedeschi.
   redistribution in New York City}.
 \newblock PhD thesis, 2016.
 
+\bibitem{2015BicyclesInTheCity}
+Urbica.
+\newblock Bicycles in the city – the data experience, Oct 2015.
+
+\bibitem{2016CityBikeRebalanced}
+Urbica.
+\newblock City bike rebalanced, Apr 2016.
+
 \bibitem{urli2013balancing}
 Tommaso Urli.
 \newblock Balancing bike sharing systems (bbss): instance generation from the
@@ -49,5 +72,10 @@ Tommaso Urli.
 Wen Wang.
 \newblock Forecasting bike rental demand using new york citi bike data.
 \newblock 2016.
+
+\bibitem{xie2015dynamic}
+Yihui Xie.
+\newblock {\em Dynamic Documents with R and knitr}, volume~29.
+\newblock CRC Press, 2015.
 
 \end{thebibliography}

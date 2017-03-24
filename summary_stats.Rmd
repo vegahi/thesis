@@ -63,7 +63,7 @@ start_station_use <- bikes %>%
 
 #### How many unique stations by end station?
 ```{r}
-o
+
 ```
 
 #### What's the use distribution of different stations in general?
@@ -135,7 +135,6 @@ trip_vol_month <- bikes %>%
   group_by(year, month) %>%
   summarise(total_trip = n()) %>%
   collect()
-
 ggplot(data = trip_vol_month, aes(month,total_trip))+ geom_line(color ="Light Blue") + facet_wrap(~ year)
 
 ```

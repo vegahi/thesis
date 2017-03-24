@@ -27,7 +27,7 @@
   \usepackage{setspace}
 % Headers and footers personalization using the `fancyhdr' package
 
-\fancyhead[R]{Page \thepage \hspace{1pt}  of %\pageref{LastPage}
+\fancyhead[R]{Page \thepage \hspace{1pt}  of \pageref{LastPage}
 }
 \usepackage{soul,xspace}
 \newcommand{\R}{{\sf R}\xspace}
@@ -112,23 +112,25 @@ Sys.setenv(TEXINPUTS=getwd(),
 
 \section{Literature Review} \label{sec:literature review}
 \subsection{About Citi Bike Data}
-
+\begin{doublespacing}
 Related work has been done on Citi Bike because of its novelty and the unbalanced stations problem.
 Many blog posts work on the descriptive analysis and interactive visualization (Schneider). For example, combining the Citibike trip data and Open Bus data, Urbica creates a blog post consists with visualization of the rebalanced bicycle route, bike availability and clustering of stations based on the usage patterns.
 
 Some literature are produced under the discipline of operations. O’mahony and Shmoys tackle the problem of overnight shifts as well as clustering problems for mid-rush-hour. The tools developed from their research are in daily use. In a related study, O’mahony optimizes the placement of both bikes and racks along with building a rebalancing model under operational constraints. Other studies work on different problems: Tedeschi uses the data from 2013 to 2015 to identify the stations between which bikes are transferred the most, understands the durations of consecutively empty or full stations and performs a k-means clustering to visualize the spatial patterns of bicycle supply and demand. A team from Cornell University estimates the demand for bike trips between pairs of locations using regression models with temporal, demographic and weather factors.
 
+\end{doublespacing}
 
 
 \subsection{About Bike-Sharing}
-
+\begin{doublespacing}
 The bicycle-sharing systems have evolved since 1960s (Faghih-Imani, Naveen Eluru). The expansion of bike-sharing prompted related work on: (overnight) rebalancing, system analysis, usage patterns from behavior and stations classification. Studies focus on different perspectives ranging from weather and socio-demographics impact() to user gender gaps.
 
 Many researches use operational techniques Machine learning algorithms have also been used to forecast bike rental demand in the Bike Sharing Demand Kaggle competition such as the neural network, decision tree and random forest. 
 
+\end{doublespacing}
 
+\subsection{The list of resources used}
 
-The list of resources used:
 \begin{itemize}
   \item \href{https://pdfs.semanticscholar.org/c2a1/f8b4f98befd2749acd1260313a7317c987b1.pdf}{Data Analysis and Optimization for (Citi) Bike Sharing}\cite{o2015data}
   
@@ -147,14 +149,41 @@ The list of resources used:
   \item \href{http://arrow.dit.ie/scschcomdis/79/}{Forecasting Bike Rental Demand Using New York Citi Bike Data}\cite{wang2016forecasting}
   
   \item \href{https://run.unl.pt/handle/10362/17842}{Rebalancing citi bike : a geospatial analysis of bike share redistribution in New York City}\cite{tedeschi2016rebalancing}
+  
+  \item \href{https://medium.com/the-data-experience/bicycles-in-the-city-f9529d918388#.en8b4xlgy}{Bicycles in the city}\cite{2015BicyclesInTheCity}
+  
+  \item \href{https://medium.com/@Urbica.co/city-bike-rebalanced-92ac61a867c7#.aunxtnsjr}{City Bike Rebalanced}\cite{2016CityBikeRebalanced}
+  
+  \item \href{https://sites.google.com/site/citibikestats/}{Citi Bike Stats}\cite{googleCitiBikeStats}
+  
+  \item \href{http://toddwschneider.com/posts/a-tale-of-twenty-two-million-citi-bikes-analyzing-the-nyc-bike-share-system/}{A Tale of Twenty-Two Million Citi Bike Rides: Analyzing the NYC Bike Share System}\cite{schneider_2016}
+  
+  \item \href{http://escholarship.org/uc/item/90b2f5xh#}{R Markdown: Integrating A Reproducible Analysis Tool into Introductory Statistics}\cite{baumer2014r}
+  
+  \item \href{https://github.com/yihui/knitr-book}{Dynamic Documents with R and knitr}\cite{xie2015dynamic}
+
 \end{itemize}
+
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{My Contribution} \label{sec:my contribution}
+%\begin{doublespacing}
+\subsection{About Citibike Package}
+\begin{doublespacing}
+Citibike package is a R package based on ETL framework to interface with NYC Citi Bike trip data. The package enables the data extraction, transformation and loading process of dealing with medium data. These functions allow users to pass the date arguments and get a populated SQL database back. All user interaction is solely under R.
 
+Citibike inherits functions from many packages: etl, dplyr, DBI, data.table, lubridate, rvest, utils, xml2. “etl” is the parent package of citibike. Following the same idea, the three step process is tailored towards Citi Bike data. “dplyr” facilitates the process of working with large data that’s hard to fit in memory. It also helps to automatically translate R code to SQL. Thus, users could pull the subset or aggregated from the database easily. In order to scrape the trip data from Citi Bike website, the data extraction part uses xml2, rvest to locate the files and utils for downloading. In order to get the proper format, data transformation uses lubridate to work on time variables, and data.table to input and output the data files. Loading data into the final target database involves writing tables to database with DBI.
+
+\end{doublespacing}
+\subsection{Reproducible Research}
+\begin{doublespacing}
+R has a strong and supportable system that helps to create reproducible work. All the code, graphics and computation results related to this project have been included in the paper. There are many advantages of conducting a reproducible research. First, with all the original data source in public, all the readers could follow the entire analysis step and step. Thus, the audience group could be much broader. Both academic researchers and industrial analysts could have the access to the work. Second, with all the code available, researchers who work on similar topics could selectively pick the parts they need, such as formatting the data. The sharing will facilitate others’ studies. Third, the reproducibility helps the verification all the workflow. Forth, as an undergraduate, it is important to learn how to share findings and communicate with others. The ability to express is an essential component regardless of future academic researches or working.
+
+
+\end{doublespacing}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Citi Bike and Package} \label{sec:citibike and package}
@@ -195,10 +224,10 @@ The list of resources used:
 
 
 
-\nocite{hijmans2005very}
+%\nocite{hijmans2005very}
 
 
-%\clearpage
+\clearpage
 
 
 

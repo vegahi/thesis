@@ -51,8 +51,7 @@ bikes %>%
 stations_use <- stations_use %>%
   gather(key = type, value = station_id, -count) %>%
   select(count, station_id)
-ggplot(data = stations_use, aes(x = station_id, y = count)) 
-+ geom_bar(stat = "identity")
+ggplot(data = stations_use, aes(x = station_id, y = count)) + geom_bar(stat = "identity")
 
 @
 

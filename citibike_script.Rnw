@@ -1,8 +1,26 @@
-\subsection{Citi Bike Functions}
 
-The Citi Bike package has the following three functions:
+\begin{doublespacing}
+citibike is an R package that facilitates Extract - Transform - Load operations for \href{https://www.citibikenyc.com/system-data}{NYC CitiBike Data}. citibike inherits functions from etl, which is the parent package. Similarly to etl, citibike allows the user to pass the date arguments and get a populated SQL database back. 
 
-Extract Function:
+The citibike data is updated monthly starting from July 2013. Using the citibike package, users could selectively get the trip data within a certain range and insert new data into the original dataset later on. All the user interactions take place solely in R.
+
+The citibike package could help with the certain aspects:
+\begin{itemize}
+  \item The size of all the csv files (starting from July 2013 to December 2016) is around 6 GB. Given the relatively big data size, it is hard for analytical software, such as R, to handle the rich information. Thus, using database language like Structured Query Language (SQL), MySQL or SQLite is a must. However, there's a gap between writing R code and SQL queries. Using dplyr and etl package, citibike enables users to simply type R codes and get the results back. The R commands are translated into database queries by the package. Therefore, the package helps to minimize the barrieres for more people interested in the dataset.
+  \item citibike is flexible in terms of which database language to use. Users could choose to the database software they prefer. Furthere, the database could be local or remote.
+  \item The main characteristic of citibike data is that the dataset is updated monthly and each month contains a lot of information. Moreover, more bike stations are being constructed both in Manhattan and surrounding areas. Thus, the growth of the entire dataset will be continuous and quick. As the data size is getting bigger, citibike package would be a more beneficial tool for the users.
+  \item Inital data cleaning and transformation have been done by the package. The original dataset from the website has some inconsistency issues: The format of the date is different across months, some have the order of \texttt{month\_day\_year} while others are in \texttt{year\_month\_day}; The format of the file names are different; Certain months do not contain the second units.
+  \item citibike does a good job by helping users get the trip data within a certain time range that they are interested. It could be consecutive months or discrete months across different years. Moreoever, every time that users update the data files, only new information would be added. The original ones are kept the same. In addition, when users are dealing with the database, they could easily wipe out the original database and insert new ones they want. The whole process saves a significant amount of operational time. 
+\end{itemize}
+
+\end{doublespacing}
+
+\subsection{Extract}
+
+\begin{doublespacing}
+Extract takes years and months parameters and allows user to fetch the data of specific date of interest. Note that the data is updated monthly. The default date is the starting month, which is July 2013. If the user enters any date before that, the user will get an error message notification. The user could check the raw folder in the local directory that's created before.
+
+\end{doublespacing}
 <<eval=FALSE, echo=TRUE>>=
 #' etl_extract
 #' @rdname etl_extract.etl_citibike
@@ -14,9 +32,12 @@ Extract Function:
 #' @importFrom utils download.file
 #' @importFrom lubridate year month days parse_date_time
 #' @inheritParams etl::etl_extract
-#' @param years a numeric vector indicating the years to be downloaded (default is 2013)
-#' @param months a numeric vector indicating the months to be downloaded (default is 7)
-#' @details This function downloads NYC CitiBike data from citibike website for years and months specified.
+#' @param years a numeric vector indicating the years to be downloaded
+#' (default is 2013)
+#' @param months a numeric vector indicating the months to be downloaded 
+#' (default is 7)
+#' @details This function downloads NYC CitiBike data from citibike website 
+#' for years and months specified.
 #' @export
 etl_extract.etl_citibike <- function(obj,  years = 2013, months = 7, ...) {
   raw_url <-"https://s3.amazonaws.com/tripdata/"
@@ -28,11 +49,13 @@ etl_extract.etl_citibike <- function(obj,  years = 2013, months = 7, ...) {
   zips <- zips[-1]
   
   # filter zips for only those months that correspond to years & months arguments
-  zips_df <- data.frame(zips, date = lubridate::parse_date_time(zips, orders = "%Y%m") 
+  zips_df <- data.frame(zips, date = 
+                          lubridate::parse_date_time(zips, orders = "%Y%m") 
                         + lubridate::days(1)) 
   # check if the date is valid
   # the date dataframe after filtering
-  zips_valid<- filter(zips_df, lubridate::year(date) %in% years & lubridate::month(date) %in% months)
+  zips_valid<- filter(zips_df, lubridate::year(date) %in% years & 
+                        lubridate::month(date) %in% months)
   
   if(nrow(zips_valid) == 0){
     warning("Invalid dates ignored")
@@ -45,8 +68,11 @@ etl_extract.etl_citibike <- function(obj,  years = 2013, months = 7, ...) {
 }
 @
 
-Transform Function:
+\subsection{Transform}
+\begin{doublespacing}
+By default, \texttt{etl\_transform} takes July 2013 data file and transform the raw data into CSV files. Similar to \texttt{etl\_extract}, the user could specify the dates. The user could check the load folder of the local directory that has been created.
 
+\end{doublespacing}
 <<eval=FALSE, echo=TRUE>>=
 #' etl_transform
 #' @rdname etl_extract.etl_citibike
@@ -54,7 +80,8 @@ Transform Function:
 #' @importFrom utils unzip
 #' @importFrom data.table fread fwrite 
 #' @inheritParams etl::etl_extract
-#' @details This function unzips NYC CitiBike data for years and months specified. 
+#' @details This function unzips NYC CitiBike data for years 
+#' and months specified. 
 #' @export
 etl_transform.etl_citibike <- function(obj, years = 2013, months = 7, ...) {
   message("Transforming raw data ...")
@@ -82,7 +109,8 @@ etl_transform.etl_citibike <- function(obj, years = 2013, months = 7, ...) {
   check_name <- function(file_name){
     if(grepl("-citibike-tripdata", x = file_name) == FALSE){
       new_name <- gsub("-", "", x = file_name)
-      new_name <- gsub("  Citi Bike trip data", "-citibike-tripdata", x = new_name)
+      new_name <- gsub("  Citi Bike trip data", "-citibike-tripdata",
+                       x = new_name)
       new_name
     }else{
       file_name
@@ -94,9 +122,11 @@ etl_transform.etl_citibike <- function(obj, years = 2013, months = 7, ...) {
     new_names[count] <- check_name(i)
     count = count +1
   }
-  file.rename(from = file.path(new_dir,load_files), to = file.path(new_dir,new_names))
+  file.rename(from = file.path(new_dir,load_files), 
+              to = file.path(new_dir,new_names))
   
-  # the following function takes in the file of a csv file, modifies the data and outputs the file under the same name
+  # the following function takes in the file of a csv file
+  # modifies the data and outputs the file under the same name
   modify_file <- function(csv_load_path){
     # read the file into R
     data <- data.table::fread(csv_load_path)
@@ -109,11 +139,14 @@ etl_transform.etl_citibike <- function(obj, years = 2013, months = 7, ...) {
                         "Bike_ID", "User_Type", "Birth_Year", "Gender")
     # check for date format
     if(suppressWarnings(all(is.na(lubridate::parse_date_time
-                                  (head(data$Start_Time), orders= c("mdY HMS","mdy HM")))) == FALSE)){
+                                  (head(data$Start_Time),
+                                    orders= c("mdY HMS","mdy HM")))) == FALSE)){
       # change the format to ymd HMS
       data<- data %>%
-        mutate(Start_Time = parse_date_time(Start_Time, orders= c("mdY HMS","mdy HM")),
-               Stop_Time = parse_date_time(Stop_Time, orders= c("mdY HMS","mdy HM")))  
+        mutate(Start_Time = parse_date_time(Start_Time, 
+                                            orders= c("mdY HMS","mdy HM")),
+               Stop_Time = parse_date_time(Stop_Time, 
+                                           orders= c("mdY HMS","mdy HM")))  
     }else{
       # no need to change the format
     }
@@ -133,15 +166,19 @@ etl_transform.etl_citibike <- function(obj, years = 2013, months = 7, ...) {
 }
 @
 
-Load Function:
+\subsection{Load}
+\begin{doublespacing}
+Import the CSV files into SQL and populate the SQL database with the transformed data.
 
+\end{doublespacing}
 << eval=FALSE, echo=TRUE>>=
 #' etl_load
 #' @rdname etl_extract.etl_citibike
 #' @importFrom DBI dbWriteTable
 #' @method etl_load etl_citibike
 #' @inheritParams etl::etl_extract
-#' @details This function loads NYC CitiBike data into a SQLite database for years and months specified.
+#' @details This function loads NYC CitiBike data into a SQLite database 
+#' for years and months specified.
 #' @export
 #' @examples
 #' \dontrun{
