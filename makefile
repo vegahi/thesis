@@ -1,6 +1,6 @@
 all: thesis_draft.pdf
 
-thesis_draft.pdf: thesis_draft.tex summary_stats.tex summary_stats_stations.tex summary_stats_others.tex citibike_script.tex references.bib
+thesis_draft.pdf: thesis_draft.tex summary_stats.tex summary_stats_stations.tex summary_stats_others.tex citibike_script.tex master_stations.tex references.bib
 	pdflatex thesis_draft
 	bibtex thesis_draft
 	pdflatex thesis_draft
@@ -18,5 +18,7 @@ summary_stats_stations.tex: summary_stats_stations.Rnw
 	Rscript -e "knitr::knit('summary_stats_stations.Rnw')"
 citibike_script.tex: citibike_script.Rnw
 	Rscript -e "knitr::knit('citibike_script.Rnw')"
+master_stations.tex: master_stations.Rnw
+	Rscript -e "knitr::knit('master_stations.Rnw')"
 thesis_draft.tex: thesis_draft.Rnw
 	Rscript -e "knitr::knit('thesis_draft.Rnw')"

@@ -209,12 +209,12 @@ R has a strong and supportable system that helps to create reproducible work. Al
 \section{Summary Statistics}
 \input{summary_stats}
 
-%\section{Summary Statistics about Stations}
+
 \input{summary_stats_stations}
 
-%\section{Summary Statistics Others}
 \input{summary_stats_others}
-\section{Second appendix}
+\section{Extended Tables}
+\input{master_stations}
 
 
 

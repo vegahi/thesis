@@ -1,0 +1,84 @@
+\subsection{Master Stations}
+\begin{doublespacing}
+A master station table in order to optimize the queries. Station names and lcoations are extracted from the original trips table into a seperate table, the master station. The station IDs is treated as the primary key for linking the trips to the stations. This design will significantly reduce the processing time for the later interactive plotting and speed up the queires. At the same time, the master station dataset could be used for reference in further analysis. 
+
+In order to create a table of master stations, the following problems have been addressed:
+\begin{itemize}
+
+  \item Duplicate Station Names: Due to the fact that the stations have duplicate names, the master station table keeps both the station name to display on the map and list of all other names. 
+  \item Different Location Information: For the same station, the recorded longitude and latitude have different values. Some of them are ronud differences, while other are not. Taking into account the number of stations (around 600), both the longitude and latitude values are averaged across all the duplicate observations.
+  \item There are 662 start stations and 689 end stations. All the stations that appear in the start station list also show up in the end station list.
+  
+\end{itemize}
+
+First, two separate tables \texttt{start\_stations} and \texttt{end\_stations} are created from the original data, trips. Each of them contain four columns: the ID number, the station name, a list of all the name, the average longitude and the average latitude.
+
+\end{doublespacing}
+
+<<eval=FALSE, echo=TRUE>>=
+CREATE TABLE start_stations 
+SELECT Start_Station_ID, 
+  count(distinct Start_Station_Longitude) as N,
+  max(Start_Station_Name) as station_name,
+  GROUP_CONCAT(DISTINCT Start_Station_Name) as all_names
+FROM citibike.trips
+GROUP BY Start_Station_ID;
+  
+CREATE TABLE end_stations 
+SELECT End_Station_ID, 
+  count(distinct End_Station_Longitude) as N,
+  max(End_Station_Name) as station_name,
+  GROUP_CONCAT(DISTINCT End_Station_Name) as all_names
+FROM citibike.trips
+GROUP BY End_Station_ID;
+@
+
+\begin{doublespacing}
+After the operations, we have the \texttt{start\_stations} of 662 rows and the \texttt{end\_stations} of 689 rows. All the stations that appear in the \texttt{start\_stations} table are also included in the \texttt{end\_stations} table.
+
+Then, the two tables are joined by the Station ID number in order to create the \texttt{master\_stations}. Null values appear in the joined dataset because of the different size of the \texttt{start\_stations} and \texttt{end\_stations}. Both the \texttt{station\_name} and \texttt{all\_names} in the \texttt{master\_stations} are extracted from the \texttt{end\_stations}.
+
+\end{doublespacing}
+
+<<eval=FALSE, echo=TRUE>>=
+# create the raw table
+CREATE TABLE master_stations_raw
+  SELECT End_Station_ID as ID,
+  (COALESCE(start.longitude,0) + COALESCE(end.longitude,0)) as longitude_total,
+	(CASE WHEN start.longitude IS NOT NULL THEN 1 ELSE 0 END + 
+    CASE WHEN end.longitude IS NOT NULL THEN 1 ELSE 0 END )as longitude_count,
+	(COALESCE(start.latitude,0) + COALESCE(end.latitude,0)) as latitude_total,
+	(CASE WHEN start.latitude IS NOT NULL THEN 1 ELSE 0 END +
+	  CASE WHEN end.latitude IS NOT NULL THEN 1 ELSE 0 END )AS latitude_count,
+  end.station_name as station_name,
+  end.all_names as all_names
+  FROM start_stations As start
+  RIGHT JOIN end_stations as end
+	on start.Start_Station_ID = end.End_Station_ID;
+
+# get the finalized data	
+CREATE TABLE master_stations
+SELECT ID, station_name,
+	longitude_total/longitude_count as longitude_avg,
+    latitude_total/latitude_count as latitude_avg,
+    all_names
+FROM master_stations_raw;
+@
+
+\begin{doublespacing}
+The master station table looks like the following and has a size of 689 by 5.
+
+\end{doublespacing}
+
+<<message=FALSE>>=
+library(DBI)
+library(etl)
+library(citibike)
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", 
+             db = src_mysql_cnf("citibike", groups = "scidb"))
+bikes %>%
+  tbl("master_stations") %>%
+  head()
+@
+
+
