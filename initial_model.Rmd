@@ -1,0 +1,52 @@
+---
+title: "initial_model"
+author: "Weijia Zhang (Vega)"
+date: "March 29, 2017"
+output: html_document
+---
+
+```{r, message= FALSE}
+library(readr)
+df_in <- readr::read_csv("/Users/vegazhang/Documents/Spring2017/dump/trips_in.csv")
+df_out <- readr::read_csv("/Users/vegazhang/Documents/Spring2017/dump/trips_out.csv")
+nrow(df_in)
+nrow(df_out)
+#model <- lm(trips_out ~ Start_Station_ID + the_day +the_hour + the_month +the_year, data = df_out)
+#summary(model)
+```
+#### Example of Station No. 2006
+```{r}
+s2006_in <- df_in %>%
+  filter(End_Station_ID == 2006)
+s2006_out <- df_out %>%
+  filter(Start_Station_ID == 2006)
+nrow(s2006_in)
+nrow(s2006_out)
+ggplot(data = s2006_in) +geom_point(aes(x = the_hour, y = trips_in))
+ggplot(data = s2006_out) +geom_point(aes(x = the_hour, y = trips_out))
+```
+
+#### Station 281
+```{r}
+s281_in <- df_in %>%
+  filter(End_Station_ID == 281)
+s281_out <- df_out %>%
+  filter(Start_Station_ID == 281)
+nrow(s281_in)
+nrow(s281_out)
+ggplot(data = s281_in) +geom_jitter(aes(x = the_hour, y = trips_in)) +facet_wrap(~the_year)
+ggplot(data = s281_out) +geom_jitter(aes(x = the_hour, y = trips_out)) +facet_wrap(~the_year)
+# possion regression model
+s281_in_avg <- s281_in %>%
+  group_by(the_hour) %>%
+  mutate(avg_trips_in = mean(trips_in)) %>%
+  select(the_hour, avg_trips_in)
+summary(model1 <- glm(trips_in ~ the_year +the_month + the_day + the_hour, family="poisson", data=s281_in))
+#summary(model2 <- glm(avg_trips_in ~ the_hour, family="poisson", data=s281_in_avg))
+phat <- predict(model1, type="response")
+s281_in_predicted <- s281_in 
+s281_in_predicted$predict <- phat
+# plot
+ggplot(s281_in_predicted) + geom_point (aes(x = the_hour, y = predict, color = "blue"))
+```
+
