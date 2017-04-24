@@ -1,0 +1,33 @@
+
+\subsection{Interactive Visualization: Shiny}
+
+\subsubsection{Decription}
+The Shiny app mainly contains two parts. The first part allows the user to 
+specify the hour in a day and then plots the trip distribution and station use
+during that hour (Figure \ref{fig:shiny-app-map}). Each station has a circle around and the size of the circle is 
+proportional to the total use of the station in that hour. The interactive plot
+also enables the users to click on the specific stations and the 
+station names will pop up on the screen.
+Each unique trip has a corresponding line on the map. The thickness of lines 
+represents the popularity of that route. The second part consist of summary statistics
+of the trip information during that hour, such as the number of total trips and the distribution
+of the trips (Figure \ref{fig:shiny-app-stats}).
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{shiny_shot.png}
+  \caption{The shiny app map view.}
+  \label{fig:shiny-app-map}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{summary_statistics_1.png}
+  \caption{The shiny app summary statisticsview.}
+  \label{fig:shiny-app-stats}
+\end{figure}
+
+\subsubsection{A Case Study: the Traffic of July 1st, 2013 at 9am}
+By inputing the date and hour, users may then click on the Summary Statistics tab.
+There are a total of 955 trips take place during that hour. The most popular route is between station 519 and 466, station 336 and 382, station 517 and 466, station 457 and 290, station 519 and 442. Each of these routes have been used three times during that hour.
+
+By clicking on the Trip Map tab, we could see the trip distribution as an interactive map. We could see that most of the rides are taken near midtown Manhatten. The most popular rides are around the transportation hubs: Grand Central, Port Authority and Penn Station. We could also see that there are some trips that are between Manhattan and Brooklyn. The route near the Central Park area is also pretty popular.
+

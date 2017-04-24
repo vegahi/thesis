@@ -81,4 +81,4 @@ bikes %>%
   head()
 @
 
-
+Remind: Plot the total station on the map later

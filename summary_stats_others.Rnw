@@ -1,8 +1,13 @@
-\subsection{Summary Statistics Others}
-All the analysis are based on the data up until 2016 December.
 
-Connect to the remote SQL database on the Smith server and set up a local directory.
-<<message = FALSE, warning = FALSE>>=
+
+<<global_options, include=FALSE>>=
+library(knitr)
+opts_chunk$set(fig.width = 10, fig.height = 5)
+@
+
+\subsubsection{Others Summary Statistics}
+
+<<message = FALSE, warning = FALSE, echo = FALSE>>=
 library(etl)
 library(DBI)
 library(citibike)
@@ -17,65 +22,146 @@ bikes <- etl("citibike", dir = "~/Desktop/citibike_data",
 @
 
 
-Bike ID:
+\subsubsubsection{Bike ID}
 
-Bikes are numbered from 14530 to 27340. However, not all numbers are used and there are 11887 bikes in total. The distribution shows us that for bikes with id number above 20000, their usage is not as much as those below 20000.
-<<>>=
+Bikes are numbered from 14530 to 27340. However, not all numbers are used and 
+there are 11887 bikes in total. The distribution shows us that for bikes with 
+id number above 20000, their usage is not as much as those below 20000. The 
+first of a bike ranging from 2013-07-01 to 2016-12-09.
+
+<<echo = FALSE, eval= FALSE, warning = FALSE>>=
 bike_id <- bikes %>%
   tbl("trips") %>%
-  select(Bike_ID) %>%
+  select(Bike_ID, Start_Time) %>%
   group_by(Bike_ID) %>%
-  summarise(count = n()) %>%
+  summarise(count = n(), min(Start_Time)) %>%
   collect(n = Inf)
-nrow(bike_id)
-summary(bike_id$Bike_ID)
-ggplot(data = bike_id, aes(x = Bike_ID, y = count)) +geom_bar(stat = "identity")
-
 @
 
 
-User Type:
+<<echo = FALSE, warning= FALSE>>=
+bike_id <- readRDS("bike_id.rds")
+ymd_hms(bike_id[3])
+colnames(bike_id)[3] <- "Start_Time"
+bike_id$Start_Time <- substring(bike_id$Start_Time,1,10)
+bike_id$Start_Time <- ymd(bike_id$Start_Time)
+@
 
-Breaking down the user type information, we could see that most of the information is available. Among that, 0.12 are customers who have 24-hour pass or 7-day pass and 0.88 are subscribers who are annual members.
+Given the total number of trips per bike, we could see that there's a clear 
+descending trend for bikes with ID number above 20000. We would like to check if 
+that's related how long they have been in use. (Figure~\ref{fig:bike-id})
+
+Here we present the summary information about \var{bike-id}:
 <<>>=
-bikes %>%
+nrow(bike_id)
+# summary about bike id numbers
+summary(bike_id$Bike_ID)
+# summary about the start time of each bike
+summary(bike_id$Start_Time)
+@
+
+
+<<bike-id, echo=FALSE, fig.cap="The total trip distribution per bike">>=
+ggplot(data = bike_id, aes(x = Bike_ID, y = count)) + 
+  geom_bar(stat = "identity") +
+  labs(list(x = "Bike ID", y = "Total Number of Trips"))
+@
+
+
+For each bike, plot the total number of trips against the first time it is in 
+use. (Figure \ref{fig:bike-firstuse})
+<<<bike-firstuse, echo=FALSE, fig.cap="The total trip number against first time in use for each bike">>=
+ggplot(data = bike_id, aes(x = Start_Time, y = count)) + 
+  geom_jitter() +
+  labs(list(x = "First Time Use", y = "Total Number of Trips"))
+@
+
+
+
+
+\subsubsubsection{User Type}
+
+Breaking down the user type information, we could see that most of the 
+information is available. Among that, 0.12 are customers who have 24-hour pass 
+or 7-day pass and 0.88 are subscribers who are annual members.
+<<echo = FALSE, eval= FALSE>>=
+user_type <- bikes %>%
   tbl("trips") %>%
   select(User_Type)%>%
   group_by(User_Type)%>%
-  summarise(count = n())
+  summarise(count = n()) %>%
+  collect()
 @
 
 
-Birth Year:
+<<echo = FALSE>>=
+user_type <- readRDS("user_type.RData")
+@
 
-Sum all, there are 1247644 missing variables and 3111175 of the trips have user birth year recorded as 0. The range of the birth year is from 1925 to 2000.
 <<>>=
+user_type
+@
+
+
+\subsubsection{Birth Year}
+
+Sum all, there are 1247644 missing variables and 3111175 of the trips have user
+birth year recorded as 0. The range of the birth year is from 1925 to 2000.
+<<echo = FALSE, eval= FALSE>>=
 birth_year <- bikes %>%
   tbl("trips") %>%
   select(Birth_Year) %>%
   group_by(Birth_Year)%>%
   summarise(count = n()) %>%
   collect(n = Inf)
+@
+
+
+<<echo = FALSE>>=
+birth_year <- readRDS("birth_year.RData")
+@
+
+
+<<>>=
 head(birth_year)
 summary(birth_year)
-@
-
-Remove the 0s and NAs to plot the user birth year distribution, we could se  most of the majority of users are born after 1975.
-
-<<>>=
-birth_year <- birth_year[3:nrow(birth_year),]
-ggplot(data = birth_year, aes(x = Birth_Year, y = count))+geom_bar(stat = "identity")
+# the percentage of data that is missing
+(1247644 + 3111175) / sum(birth_year$count)
 @
 
 
-For the gender column (Zero=unknown; 1=male; 2=female), around 0.12 of the users are unknown, 0.67 of the users are male and 0.21 are female.
 
-<<>>=
-bikes %>%
+After removing the 0s, NAs and years earlier that 1913, the user birth year 
+distribution is plotted. We could see  most of the majority of users are born 
+after 1975. (Figure \ref{fig:birth-year})
+
+<<birth-year, echo=FALSE, fig.cap="The birth year of users">>=
+birth_year <- birth_year %>%
+  filter(Birth_Year >= 1913)
+ggplot(data = birth_year, aes(x = Birth_Year, y = count)) + 
+  geom_bar(stat = "identity") +
+  labs(list(x = "Year of Birth", y = "Total Number of Users Born in the Year"))
+@
+
+
+For the gender column (Zero=unknown; 1=male; 2=female), around 0.12 of the users 
+are unknown, 0.67 of the users are male and 0.21 are female.
+
+<<echo = FALSE, eval= FALSE>>=
+user_gender <- bikes %>%
   tbl("trips") %>%
   select(Gender) %>%
   group_by(Gender)%>%
-  summarise(count = n())
+  summarise(count = n()) %>%
+  collect()
 @
 
+
+<<echo = FALSE>>=
+user_gender <- readRDS("user_gender.RData")
+@
+
+<<>>=
+user_gender
+@
 

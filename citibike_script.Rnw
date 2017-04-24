@@ -1,217 +1,241 @@
 
 \begin{doublespacing}
-citibike is an R package that facilitates Extract - Transform - Load operations for \href{https://www.citibikenyc.com/system-data}{NYC CitiBike Data}. citibike inherits functions from etl, which is the parent package. Similarly to etl, citibike allows the user to pass the date arguments and get a populated SQL database back. 
 
-The citibike data is updated monthly starting from July 2013. Using the citibike package, users could selectively get the trip data within a certain range and insert new data into the original dataset later on. All the user interactions take place solely in R.
+Citi Bike data is updated monthly starting from July 2013. Using 
+\pkg{citibike}, users can select trip data within a certain range as well as 
+inserting new data into the original dataset later on. All the user interactions take place solely in R.
 
-The citibike package could help with the certain aspects:
-\begin{itemize}
-  \item The size of all the csv files (starting from July 2013 to December 2016) is around 6 GB. Given the relatively big data size, it is hard for analytical software, such as R, to handle the rich information. Thus, using database language like Structured Query Language (SQL), MySQL or SQLite is a must. However, there's a gap between writing R code and SQL queries. Using dplyr and etl package, citibike enables users to simply type R codes and get the results back. The R commands are translated into database queries by the package. Therefore, the package helps to minimize the barrieres for more people interested in the dataset.
-  \item citibike is flexible in terms of which database language to use. Users could choose to the database software they prefer. Furthere, the database could be local or remote.
-  \item The main characteristic of citibike data is that the dataset is updated monthly and each month contains a lot of information. Moreover, more bike stations are being constructed both in Manhattan and surrounding areas. Thus, the growth of the entire dataset will be continuous and quick. As the data size is getting bigger, citibike package would be a more beneficial tool for the users.
-  \item Inital data cleaning and transformation have been done by the package. The original dataset from the website has some inconsistency issues: The format of the date is different across months, some have the order of \texttt{month\_day\_year} while others are in \texttt{year\_month\_day}; The format of the file names are different; Certain months do not contain the second units.
-  \item citibike does a good job by helping users get the trip data within a certain time range that they are interested. It could be consecutive months or discrete months across different years. Moreoever, every time that users update the data files, only new information would be added. The original ones are kept the same. In addition, when users are dealing with the database, they could easily wipe out the original database and insert new ones they want. The whole process saves a significant amount of operational time. 
-\end{itemize}
+\subsection{Storage on Disk}
 
-\end{doublespacing}
+The total size of all the CSV files (starting from July 2013 to December 2016) 
+is around 6 GB. 
+A regular personal computer has a memory size less than or equal to 8GB. The memory space sets the upper bound limit for the maximum size of a dataset that can be loaded by the compputer. 
+R keeps all objects in memory.
+Since different applications also take some use of the memory,
+importing the full dataset directly to R will make the program crash. 
+It is possible R could address larger data if the computer memory is increased, 
+such as a bigger RAM size. However, given the
+regular laptops that we have, another way to solve this problem is to store the 
+data files on hard disk. Considering the cost of hardware and the bus spead trade-off,
+it is often more efficient to store medium-sized
+data on hard disk.
+
+
+Hard drives are 
+relatively inexpensive compared to RAM. According to the 2016 prices from Amazon, RAM
+is around \$3.81 per GB while hard disk space is only about \$0.055 per GB. Additionally, memory space is generally kept for temporary storage while hard drives
+are used to keep permanent items. Data files could be kept under the hard disk given that
+users might not access them on a daily basis.
+
+Given the different architectures, the data accessing speed of RAM and hard drives 
+varies a lot. While RAM could quickly retrieve the information in a few nanoseconds,
+hard drives take a few milliseconds. The ratio between the performances is around 1,000,000.
+We recognize the fact that RAM outperforms hard drives for accessing information more quickly. However, given 
+the invidividual computational resources, using hard drives is more appealing.
+The large size of the data files combined with the affordable 
+and plentiful storage space on the hard disk makes hard drivea more approporiate choice for this data.
+
+\subsection{Seamless Integration}
+
+\pkg{citibike} abstracts the details of processing data from hard 
+disk in R and enables users without experience with relational database management systems 
+to easily access Citi Bike data. It fills the gap between writing R code and SQL 
+queries, using \pkg{dplyr} and \pkg{etl} packages, enabling users to 
+simply type R code and get the results back. Therefore, the package helps to 
+reduce the barriers for more people interested in the dataset.
+
+Another challenge of citibike data is that the dataset is updated 
+  monthly and each month contains a lot of information. Moreover, more bike 
+  stations are being constructed both in Manhattan and surrounding areas. As the data 
+  size gets bigger, \pkg{citibike} would be a more beneficial tool for users.
+  
+\pkg{citibike} helps users get the trip data within a certain time range 
+  of interest. It could be consecutive months, or discrete months 
+  across different years. Moreoever, every time that users update the data files, 
+  only new information would be added. The original ones are kept the same. 
+  In addition, when users are working with the database, they could easily wipe 
+  out the original database and insert new ones they want. The whole process 
+  saves a significant amount of operational time. 
+
+\pkg{citibike} is flexible in terms of which database language to use 
+  (e.g.MySQL, PostgreSQL and SQLite). Users may choose which  database 
+  software they prefer, which may be attraction to more advanced users. Furthermore, the database could be local or remote. Having database remotely in a server could enable data sharing among users.
+  
+
+\subsection{ETL citibike}
+
+\pkg{citibike} is dependent on \pkg{etl}, which facilitates the Extract-Transform-Load process of working
+with medium-sized data in R. Any \pkg{etl}-derived package can make use of the SQL supported by \pkg{dplyr}.
+Since \pkg{citibike} currently lives on GitHub and not on CRAN, users need to install it using \pkg{devtools}~\cite{pkgdevtools}.
+
+<<eval=FALSE, message=FALSE>>=
+install.packages("devtools", repos="http://cran.rstudio.com/")
+devtools::install_github("beanumber/citibike")
+@
+
+To use \pkg{citibike}, users need to first load the package.
+Once the packages are loaded, we could instantiate an \pkg{etl} object. Three parts need
+to be specified: First, the name of the extended package, which will be citibike;
+Second, the path to the database; Third, the path to a local folder on the laptop.
+Since \pkg{citibike} works by pulling the data from the web sources and then load them
+into a relational database, we need to specify the connection to the target. If no SQL 
+source has been specified, a local \pkg{RSQLite} database will be created for 
+the user. Following the
+ETL workflow, both the raw data and the transformed data need to be stored on local drives.
+Thus, a local folder needs to be first created.
+
+In the example, a folder called citibike\_data is first created on the desktop. The 
+\var{dir} argument specifies the path to the folder. The target database is a remote MySQL 
+database.
+
+<<message = FALSE, eval=FALSE>>=
+# load the packages
+library(citibike)
+# example local directory on desktop 
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", 
+             db = src_mysql_cnf("citibike", groups = "scidb"))
+@
+
+After creating the \var{bikes} object, two folders and a connection to the database
+will be generated under the folder that the user specifies earlier. There are two folders,
+one called \var{raw} and the other called \var{load}. The \var{raw} folder will be
+used to store the raw data files that are directly scraped from the Citi Bike Websites.
+The \func{extract} function helps download and store the original data files in the 
+ZIP file format under the 
+\var{raw} folder. The \func{transform} function doesn't modify the original data files. Instead,
+\func{transform} will open the raw data files, make changes to keep all data files in a consistent format and then 
+store them in the \var{load} folder. All the files in the 
+\var{load} directory are in CSV format. Following the ETL framework to 
+break down the two steps will make the original data always available. If the data gets corrupted
+during the next stage, users can still roll back easily. After formatting the data files in the 
+transform stage, the final step is to load the files into the database. By connecting to the 
+back-end database, \var{load} will take the files inside the \var{load} folder and write each of them
+into the target database that the user specifies.
 
 \subsection{Extract}
 
-\begin{doublespacing}
-Extract takes years and months parameters and allows user to fetch the data of specific date of interest. Note that the data is updated monthly. The default date is the starting month, which is July 2013. If the user enters any date before that, the user will get an error message notification. The user could check the raw folder in the local directory that's created before.
 
-\end{doublespacing}
-<<eval=FALSE, echo=TRUE>>=
-#' etl_extract
-#' @rdname etl_extract.etl_citibike
-#' @method etl_extract etl_citibike
-#' @import etl
-#' @import dplyr
-#' @importFrom rvest html_nodes html_text
-#' @importFrom xml2 read_html
-#' @importFrom utils download.file
-#' @importFrom lubridate year month days parse_date_time
-#' @inheritParams etl::etl_extract
-#' @param years a numeric vector indicating the years to be downloaded
-#' (default is 2013)
-#' @param months a numeric vector indicating the months to be downloaded 
-#' (default is 7)
-#' @details This function downloads NYC CitiBike data from citibike website 
-#' for years and months specified.
-#' @export
-etl_extract.etl_citibike <- function(obj,  years = 2013, months = 7, ...) {
-  raw_url <-"https://s3.amazonaws.com/tripdata/"
-  webpage <- xml2::read_html(raw_url)
-  keys <- webpage %>%
-    rvest::html_nodes("key") %>%
-    rvest::html_text()
-  zips <- grep("*.zip", keys, value = TRUE)
-  zips <- zips[-1]
-  
-  # filter zips for only those months that correspond to years & months arguments
-  zips_df <- data.frame(zips, date = 
-                          lubridate::parse_date_time(zips, orders = "%Y%m") 
-                        + lubridate::days(1)) 
-  # check if the date is valid
-  # the date dataframe after filtering
-  zips_valid<- filter(zips_df, lubridate::year(date) %in% years & 
-                        lubridate::month(date) %in% months)
-  
-  if(nrow(zips_valid) == 0){
-    warning("Invalid dates ignored")
-  } else{
-    src <- paste0(raw_url, zips_valid$zips)
-    
-    smart_download(obj, src)
-    invisible(obj)
-  }
-}
-@
+\func{etl\_extract} takes \var{years} and \var{months} parameters and enables the user to fetch the 
+data of specific date of interest. Note that the data is updated monthly on the Citi Bike website. The 
+default date is the starting month, which is July 2013. If the user enters any 
+date before that, the user will get a warning message notification. 
 
 \subsection{Transform}
-\begin{doublespacing}
-By default, \texttt{etl\_transform} takes July 2013 data file and transform the raw data into CSV files. Similar to \texttt{etl\_extract}, the user could specify the dates. The user could check the load folder of the local directory that has been created.
 
-\end{doublespacing}
-<<eval=FALSE, echo=TRUE>>=
-#' etl_transform
-#' @rdname etl_extract.etl_citibike
-#' @method etl_transform etl_citibike
-#' @importFrom utils unzip
-#' @importFrom data.table fread fwrite 
-#' @inheritParams etl::etl_extract
-#' @details This function unzips NYC CitiBike data for years 
-#' and months specified. 
-#' @export
-etl_transform.etl_citibike <- function(obj, years = 2013, months = 7, ...) {
-  message("Transforming raw data ...")
-  dir <- attr(obj, "raw_dir")
-  src <- list.files(dir, full.names = TRUE)
-  files <- basename(src)
-  new_dir <- attr(obj, "load_dir")
-  
-  year_month <- valid_year_month(years, months) %>%
-    mutate(month = ifelse(month< 10, paste0("0",month), month))%>%
-    mutate_(year_month = ~paste0(year, month)) %>%
-    mutate_(zip_files = ~paste0(year_month, "-citibike-tripdata.zip")) %>%
-    mutate_(out_files = ~paste0(year_month,"-citibike-tripdata.csv"))%>%
-    filter_(~zip_files %in% files) %>%
-    mutate_(path = ~paste0(dir,"/",zip_files)) %>%
-    mutate_(out_path = ~paste0(new_dir,"/",out_files))
-  # zip file path
-  path <- year_month$path
-  # valid csv path
-  csv_path <- year_month$out_path
-  # unzip files interested
-  lapply(path, function(x) unzip(x, exdir = new_dir))
-  # rename
-  load_files <- list.files(new_dir)
-  check_name <- function(file_name){
-    if(grepl("-citibike-tripdata", x = file_name) == FALSE){
-      new_name <- gsub("-", "", x = file_name)
-      new_name <- gsub("  Citi Bike trip data", "-citibike-tripdata",
-                       x = new_name)
-      new_name
-    }else{
-      file_name
-    }
-  }
-  new_names <- vector(mode="character", length=length(load_files))
-  count = 1
-  for (i in load_files){
-    new_names[count] <- check_name(i)
-    count = count +1
-  }
-  file.rename(from = file.path(new_dir,load_files), 
-              to = file.path(new_dir,new_names))
-  
-  # the following function takes in the file of a csv file
-  # modifies the data and outputs the file under the same name
-  modify_file <- function(csv_load_path){
-    # read the file into R
-    data <- data.table::fread(csv_load_path)
-    # rename columns
-    colnames(data) <- c("Trip_Duration", "Start_Time","Stop_Time",
-                        "Start_Station_ID", "Start_Station_Name", 
-                        "Start_Station_Latitude", "Start_Station_Longitude",
-                        "End_Station_ID", "End_Station_Name", 
-                        "End_Station_Latitude", "End_Station_Longitude",
-                        "Bike_ID", "User_Type", "Birth_Year", "Gender")
-    # check for date format
-    if(suppressWarnings(all(is.na(lubridate::parse_date_time
-                                  (head(data$Start_Time),
-                                    orders= c("mdY HMS","mdy HM")))) == FALSE)){
-      # change the format to ymd HMS
-      data<- data %>%
-        mutate(Start_Time = parse_date_time(Start_Time, 
-                                            orders= c("mdY HMS","mdy HM")),
-               Stop_Time = parse_date_time(Stop_Time, 
-                                           orders= c("mdY HMS","mdy HM")))  
-    }else{
-      # no need to change the format
-    }
-    # change from ymd HMS to ymd HM
-    data$Start_Time <- substring(data$Start_Time,1,16)
-    data$Stop_Time <- substring(data$Stop_Time,1,16)
-    
-    # output the modified csv out
-    data.table::fwrite(x = data, csv_load_path, append = FALSE)
-    
-  }
-  
-  # apply the function to each file
-  lapply(csv_path,function(x) modify_file(x))
-  
-  invisible(obj)
-}
-@
+By default, \func{etl\_transform} takes the July 2013 data file and then transforms the 
+raw data into a CSV file in R. After cleaning up the data, \func{etl\_transform}
+creates a new formatted CSV file and inserts the it into the load directory.
+Similar to \func{etl\_extract}, the user could specify the dates of interest.
+
+
+\subsubsection{Reconciling Inconsistent Filenames}
+
+After extracting the data, a list of CSV data files are created under the raw 
+folder. Unlike the zip files which all have the same naming pattern 
+(such as 201307-citibike-tripdata.zip), the CSV
+files have different name formats. Some of them have 
+yearmonth-citibike-tripdata.csv. Others use yearmonth Citi Bike trip data.
+\func{etl\_transform} converts all file names into 
+yearmonth-citibike-tripdata.csv
+
+\subsubsection{Reconciling Inconsistent Date Formats}
+
+The data files can't be directly loaded into the database because 
+of a date inconsistency issue. There are two types of data format. For files 
+from July 2013 to August 2014 and from October 2016 to December 2016, the 
+timestamps are recorded as \texttt{year\_month\_day}. The other files from 
+September 2014 to September 2016 are stored as \texttt{month\_day\_year}. The
+formatting difference makes it hard to join the files together. Thus, the 
+\func{etl\_transform} takes care of this problem by reformatting all the 
+timestamps as \texttt{year\_month\_day}.
+In addtion, in some of the data files, the timestamp columns don't have the 
+second units, while others do. To solve this problem, \func{etl\_transform} 
+drops all the seconds.
+
+\subsubsection{Optimizing I/O Process}
+Optimizing the file input and output process is also an important part of 
+\func{etl\_transform}. \func{etl\_transform} uses \func{fread} and \func{fwrite}
+from \pkg{data.table} instead of \var{read\_csv} and \var{write\_csv} from 
+\pkg{readr} because the data processing time with \pkg{data.table} is much shorter. To measure the performance, the data from 201501 is used as an 
+example. \func{read\_csv} takes 1.039 (seconds) user time, 0.116 (seconds)
+system time to read in 
+the file. The total elapsed time is 1.467. \func{fread} uses 0.532 user time, 
+0.061 system time, which creates a total of 0.866 elapsed time. For outputting 
+the file after cleaning, \func{write\_csv} takes 1.955 user time, 0.145 system 
+time, which is a sum of 2.252 elapsed time. However, \func{fwrite} only uses 
+0.348 user time, 0.367 system time and a total of 1.118 elapsed time. To 
+conclude, \pkg{data.table} takes only half of the time comparing to \pkg{readr}, and so we determine that
+\pkg{data.table} performs better than \pkg{readr} for the Citi Bike data.
+
+
 
 \subsection{Load}
-\begin{doublespacing}
-Import the CSV files into SQL and populate the SQL database with the transformed data.
 
-\end{doublespacing}
-<< eval=FALSE, echo=TRUE>>=
-#' etl_load
-#' @rdname etl_extract.etl_citibike
-#' @importFrom DBI dbWriteTable
-#' @method etl_load etl_citibike
-#' @inheritParams etl::etl_extract
-#' @details This function loads NYC CitiBike data into a SQLite database 
-#' for years and months specified.
-#' @export
-#' @examples
-#' \dontrun{
-#' bikes <- etl("citibike", dir = "~/Desktop/citibike_data")
-#' bikes %>%
-#'   etl_extract() %>%
-#'   etl_transform() %>%
-#'   etl_load()
-#' }
+The \func{etl\_load} function imports the CSV files and populates the SQL database with the transformed
+data. To reduce the data processing complexity, an option, \func{init.mysql} is created 
+under the \pkg{citibike} to help users create the default table structure for 
+MySQL databases.
 
 
-etl_load.etl_citibike <- function(obj, years = 2013, months = 7, ...) {
-  dir <- attr(obj, "load_dir")
-  src <- list.files(dir, full.names = TRUE)
-  files <- basename(src)
-  
-  #valid years and month; create corresponding path
-  year_month <- valid_year_month(years, months) %>%
-    mutate(month = ifelse(month< 10, paste0("0",month), month))%>%
-    mutate_(year_month = ~paste0(year, month)) %>%
-    mutate_(zip_files = ~paste0(year_month, "-citibike-tripdata.csv")) %>%
-    filter_(~zip_files %in% files) %>%
-    mutate_(path = ~paste0(dir,"/",zip_files))
-  path <- year_month$path
-  
-  #Write to Table
-  message("Writing bike data to the database...")
-  for (i in path){
-    DBI::dbWriteTable(obj$con, "trips", i, 
-                      append = TRUE, overwrite = FALSE, ...)
-    }
-  invisible(obj)
-}
+\subsection{Database Initializaton}
 
+When first creating the \var{bikes} object, users are provided a default schema for use with
+MySQL. Due to the large data size, data storage for Citi Bike data in MySQL has been optimizedby partioning the whole datasets into subgroups.
+The \func{etl\_init} uses the \func{init.mysql} file under \pkg{citibike}.
+<<echo = TRUE, eval= FALSE>>=
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", 
+             db = src_mysql_cnf("citibike", groups = "scidb"))
+
+etl_init(bikes)
+@
+
+Given the specifed structure of citibike data, the default columns will be automatically created 
+when running
+\func{etl\_init}, including both the names and the variable types.
+
+The \var{trips} dataset, starting from 2013 to 2016, contains roughly around 60 million records. If we simply 
+write the datafiles to the database, we may run into various issues with query speed later in the analysis stage. 
+
+\func{etl\_init} mainly helps with two things.
+\var{key}s are created for both the \var{Start\_Station\_ID} and \var{End\_Station\_ID}. Due to 
+the constraint that each row in this dataset represents a unique bike trip, no primary key could be created. A primary key can be created for a columns containing all unque values, such as the SSN of individuals. Adding keys to the table will speed up the lookup and query processing. The improvements are
+more significant. When operations like \textit{select}, \textit{group}, \textit{order} and \textit{join} are performed. For example, if we 
+want to find all the trips that start from station no.500, if there's no key (index)
+created, MySQL will need to scan every row of the table, and compare each
+of them with the station number 500. However, if the key on \var{Start\_Station\_ID} is made, when 
+executing the query, MySQL will only need to check the list of start stations, which is around 600.
+Therefore, keys are built to optimize from the stations level.
+
+\func{etl\_init} also helps with optimizing by partitioning the table by the year 
+of \var{Start\_Time}, based on the user's need. When compared to storing all the trip records
+in one place, partitioning divides different portions of the table and stores them in different places. Most of the time, users will not 
+request the entire database, instead, they will only ask for trips within a certain 
+time range. Partioning the table by year will separate the entire table into 5 parts: trips 
+starting in 2013, 2014, 2015, 2016 and afterwards. Thus, when users request the trips in 2013,
+the amount of the work that MySQL needs to do will be reduced roughly by a factor between 0.2 to 0.3.
+
+
+\subsection{Source Code}
+\subsubsection{ETL Extract}
+<<>>=
+citibike:::etl_extract.etl_citibike
+@
+
+\subsubsection{ETL Transform}
+
+<<>>=
+citibike:::etl_transform.etl_citibike
+@
+
+\subsubsection{ETL Load}
+
+<<>>=
+citibike:::etl_load.etl_citibike
+@
+
+\subsubsection{ETL Init}
+
+<<echo = FALSE, eval = TRUE, engine='bash', comment=''>>=
+cat /Users/vegazhang/Documents/Spring2017/Thesis/citibike/inst/sql/init.mysql
 @
 

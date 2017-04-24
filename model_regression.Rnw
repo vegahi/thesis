@@ -1,0 +1,371 @@
+
+<<global_options, include=FALSE, message= FALSE>>=
+library(knitr)
+library(dplyr)
+opts_chunk$set(fig.width = 10, fig.height = 5)
+@
+
+
+\subsection{Modeling Introduction}
+Given the large volume of data, we would like to know if it is possible to accurately predict the bike usage
+for individual stations in the Citi Bike System.
+We start by building 
+an inital baseline regression model, estabilishing a prediction model for traffic volume at the
+year, month, day and hour levels. There are two variables
+that we are intersted in: for a given station id, we would like to know both its \textit{total traffic volume}
+and \textit{netflow}. Total traffic volume is defined by the sum of the number of bikes going out and coming 
+in during a certain time range. Netflow is computed by taking the difference between the number of
+bikes coming out from a station and the number of bikes returning back to that station. It is possible
+that some of the stations might not have inflow or outflow during that time range. If so
+we will use 0 to denote the netflow volumes of stations that don't have inflow or outflow. The details of the table creation may be found in Appendix.
+
+\subsubsection{Input Variables}
+The response variables:
+\begin{itemize}
+  \item \var{total traffic} measures the total number of trips per station during a certain time range. It accounts for the bike trips that both start from and end at that station.
+  \item \var{netflow} measures the difference between the number of trips out and in per station during a certain time period. If the value is negative, more people take bikes out than returning bikes to it. 
+\end{itemize}
+
+The expanatory variables are based on the start time of the trips:
+\begin{itemize}
+  \item \var{year} 2013, 2014 2015 or 2016. \var{year} is treated as an ordinal variable. \var{year} is not used as a continuous variable because for many stations, the total number of trips does not increase by year.
+  \item \var{month} represents the 12 months in a year. It is also treated as an ordinal variable.
+  \item \var{day} the days in a month, which is ordinal.
+  \item \var{Weekday} is a boolean indicating if the trip takes place on a weekday of not. 
+  \item \var{ID} is a unique identifier for each stations in the system. Thus, it is treated as a as a categorical variable with around 600 levels. However, having too many levels in a categorical variable 
+might be a problem since the regression model needs to compute one coefficient for each level. What R does is that it converts \var{station} into more than 600 dummy variables, which is computationally heavy.
+\end{itemize}
+
+We include \var{year} as a predictor because the trip volume in one year differs from that in another year. However, it gives rise to the question
+that should it be coded as a ordinal variable or continuous variable. 
+While we have only discrete observations of year in the data, it is plausible to consider whether 
+the usage of a station might increase linearly over an individual year. 
+Although the exploratory analysis (**Add figure number here**)
+indicates that the bike usage across years
+is increasing signficantly, we would like to know if that increase is driven by a continuous increase
+in the number of users 
+or solely because of newly added stations to the system, which is a discrete event.
+
+In order to answer this question, we first make use of a visual summary of 
+total number of trips take place at each station across years (Figure \ref{fig:yeargrowth}). We plot the total number of trips in each year including the station as either an origin or a destination.
+Each line represents one station in the system. However, as noticed in the graph, one station has a 
+much greater number of trips since it has the steepest growth from 2015 to 2016, which makes us lose the information about the other stations. We identify 
+the influential line, which represents station No.519, Pershing Square North (Figure \ref{fig:pershing-square}). Pershing Square north is located near Grand Central Station, which is a major transportation hub. Then, we take out station 519
+from the dataset and try to capture most of the information from the other stations
+. 
+As it is 
+shown, the graph (Figure \ref{fig:yeargrowth-rescale}) shows more variation of the trip distribution for different stations across years.
+We observe most stations increase slowly. But there are some stations that tend to have steeper slopes.
+These stations tend to be those with greater traffic volume. We also notice that there are some lines bounce up and down, which means that many stations fluctuate 
+acorss years.
+In addtion, the initial growth is more obvious, but that is due to the fact that 2013 only has data of 6 months. We also notice that there are a group of lines that start from 2015 and end at 2016, these are the newly added stations in 2015.
+<<yeargrowth, echo=FALSE, message = FALSE, fig.cap= "The total number of trips per year. Each dashed-line represents one station in the system. There is one station that has the highest value in 2016 , which is much greater than the second biggest value. Thus, the maximum is pulling up the y axis and make the lines of other stations squeezed together.">>=
+library(ggplot2)
+trip_netflow_year <- readRDS("trip_netflow_year.rds")
+ggplot(trip_netflow_year, aes( x = the_year, y = total, group = ID)) + 
+  geom_line(linetype = "dashed") +
+  labs(list(x = "Year", y = "Total Number of Trips"))
+@
+
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{pershing_square.png}
+  \caption{Station 519 is Pershing Square North. It has the maximum number of total trips, around 300000. Pershing Square North is right near Grand Central Station, which is a major transportation hub.}
+  \label{fig:pershing-square}
+\end{figure}
+<<eval = FALSE, echo = FALSE>>=
+# find station no 519
+bikes %>%
+  tbl("master_stations") %>%
+  filter(ID == 519)
+# plot it
+library(leaflet)
+leaflet() %>%
+  addTiles() %>%
+  addCircles(-73.97779, 40.75195, color = "red", radius = 60, 
+             fillOpacity = 0.8) %>%
+  addCircleMarkers(-73.97779, 40.75195,  label = "Pershing Square North", 
+                   labelOptions = labelOptions(noHide = T, 
+                                               direction = 'top', textOnly = T))
+@
+
+
+<<yeargrowth-rescale, echo = FALSE, fig.cap = "The total number of trips per year with Station No519 taken out. Taking out the maximum shows us more fluctuation among the stations. Most stations tend to have a stable traffic volume acorss years. Some of the stations have a slow increase. There are some dashed lines that bounce up and down, which means that the total traffic of the stations are not growing across years.">>=
+trip_netflow_year_group1 <- filter(trip_netflow_year, ID != 519)
+ggplot(trip_netflow_year_group1, aes( x = the_year, y = total, group = ID)) + 
+  geom_line(linetype = "dashed") +
+  labs(list(x = "Year", y = "Total Number of Trips"))
+@
+
+
+
+\subsection{About Total Traffic}
+Learning from the exploratory analysis, we first build the baseline regression model for total traffic.
+We would like to see if expanatory variables
+like \var{year}, \var{month}, \var{day}, \var{ID} and \var{Weekday} could be used to estimate the total traffic.
+<<eval = FALSE, echo = FALSE>>=
+library(ggplot2)
+trip_netflow_year <- readRDS("trip_netflow_year.rds")
+trip_netflow_month <- readRDS("trip_netflow_month.rds")
+trip_netflow_day <- readRDS("trip_netflow_day")
+trip_netflow_hour <- readRDS("trip_netflow_hour.rds")
+trip_netflow_weekday <- readRDS("trip_netflow_weekday.rds")
+# year
+nrow(trip_netflow_year)
+ff2 <- total ~ factor(the_year) + factor(ID)
+b <- lm(ff2, trip_netflow_year)
+summary(b)$r.squared
+sqrt(mean(b$residuals^2))
+
+# month
+nrow(trip_netflow_month)
+ff4 <- total ~ factor(the_year) + factor(the_month) + factor(ID)
+d <- lm(ff4, trip_netflow_month)
+summary(d)$r.squared
+sqrt(mean(d$residuals^2))
+
+# day
+nrow(trip_netflow_day)
+ff6 <- total ~ factor(the_year) + factor(the_month) + factor(the_day) + factor(ID)
+f <- lm(ff6, trip_netflow_day)
+summary(f)$r.squared
+sqrt(mean(f$residuals^2))
+
+# weekday
+ff8 <- total ~ factor(the_year) + factor(the_month) + 
+  factor(Weekday) +factor(ID)
+h <- lm(ff8, trip_netflow_weekday)
+summary(h)$r.squared
+sqrt(mean(h$residuals^2))
+@
+
+
+\subsubsection{Year}
+total trip per year = year + ID
+
+The dataset has 1800 rows. We include \var{year} and \var{ID} in the model to predict the total number of trips per station
+each year. The R square is around 0.8942 with RMSE of 11772.46.
+
+\subsubsection{Month}
+total trip per month = year + month + ID
+
+There are 16821 rows in this dataset. We include \var{year}, \var{ID} and \var{month} in the model to predict the total number of trips per station each month. The R square is around 0.8296 with RMSE of 1568.93
+
+\subsubsection{Day}
+total trip per day = year + month + day + ID
+
+The dataset has 494911 rows. We include \var{year}, \var{ID}, \var{month}, \var{Day} and \var{Weekday} in the model to predict the total number of trips per station each day. Since ordinal variables have a lot of levels, the computation time is much longer compared to the previous model. The R square is around 0.6877 with RMSE of 77.7067.
+
+\subsubsection{Weekday}
+total trip per day = year + month + Weekday + ID
+
+Similar to the previous model, we would like to predict the total number of trips at each station on a day.
+However, instead of using \var{Day}, which has 31 levels, we choose \var{Weekday}. As mentioned in the exploratory analysis, the heatmap of total traffic per year,  we find that the total number of trips during weekends tend to be smaller than that during the weekdays. Therefore, \var{Weekday} yields more information
+than the ordinal variable \var{Day}. The R square is around 0.6971 and RMSE is 76.5217.
+
+\subsubsection{Summary and Discussion}
+
+
+As shown in the \ref{table:1}, given the incresing number of observations, we could see that the model
+performance on a more detailed dataset is not as good as that on a more general one. In general, 
+the input variables are able to explain the variation of the total number of trips. The model improvement 
+when we substitue \var{Day} with \var{Weekday} to predict the daily traffic illustrates the seasonality in the dataset.
+
+We would also like to implement K-Fold Cross Validation aviod overfitting the models. However, \var{ID} has more than 600 levels, which causes a problem when performing cross validation. Due to the randomization in 
+separating out the datasets, the stations that appeared in the test dataset might not be in the training set. 
+
+We also tried to build a model using \var{Year}, \var{Month}, \var{Weekday}, \var{ID} and \var{Hour} for the hourly traffic dataset. However, the 600 levels of \var{ID} makes the compuataion time too large, which
+is could not be done on a laptop.
+
+\begin{table}%[netflow]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+ & Year Data & Month Data & Day Data & Day Data\\
+\hline
+number of records & 1800 & 16821 & 494911 & 494911 \\ 
+\hline
+Year & * & * & * & *   \\
+Month &  & * & *  & *\\
+Day &  &  & * &  \\
+Weekday &  &  &  & * \\ 
+\hline
+R Square & 0.8942 & 0.8296 & 0.6877 & 0.6971 \\
+\hline
+RMSE & 11772.46 & 1568.93 & 77.70664 & 76.5217 \\
+\hline
+\end{tabular}
+\caption{Summary Table of Total Trip Regression Modeling Prediction Results}
+\label{table:1}
+\end{table}
+
+
+\subsection{About Net Traffic}
+<<eval = FALSE, echo = FALSE>>=
+# year
+ff1 <- netflow ~ factor(the_year) + factor(ID)
+a <- lm(ff1, trip_netflow_year)
+summary(a)$r.squared
+sqrt(mean(a$residuals^2))
+
+# month
+ff3 <- netflow ~ factor(the_year) + factor(the_month) + factor(ID)
+c <- lm(ff3, trip_netflow_month)
+summary(c)$r.squared
+sqrt(mean(c$residuals^2))
+
+# day
+ff5 <- netflow ~ factor(the_year) + factor(the_month) + factor(the_day) + factor(ID)
+e <- lm(ff5, trip_netflow_day)
+summary(e)$r.squared
+sqrt(mean(e$residuals^2))
+
+# weekday
+ff7 <- netflow ~ factor(the_year) + factor(the_month) + 
+  factor(Weekday) + factor(ID)
+g <- lm(ff7, trip_netflow_weekday)
+summary(g)$r.squared
+sqrt(mean(g$residuals^2))
+@
+
+
+\subsubsection{Year}
+netflow = year + ID
+
+The dataset has 1800 rows. We want to see the netflow per year could be explained by \var{Year} and {ID}. The R square is 0.6324 and RMSE is 1112.517
+
+\subsubsection{Month}
+netflow = year + month + ID 
+
+There are 16821 rows in this dataset. We want to see if \var{Year}, \var{Month} and \var{ID} could be used to predict the netflow of a station in a month. The result shows an R square around 0.4356 and RMSE of 12.3269
+
+\subsubsection{Day}
+netflow = year + month + day + ID 
+
+The dataset has 494911 rows. We used \var{Year}, \var{Month}, \var{Day} and \var{ID} to predict the daily netflow of a station. The R square is around 0.1625 and RMSE is around 77.7067.
+
+\subsubsection{Weekday}
+Using the same daily netflow dataset, we see subsitute the predictor \var{Day} with \var{Weekday} since \var{Weekday} contains more information about the variation across the days. The R square is around 0.1625 and RMSE is around 12.3269.
+
+\subsubsection{Fitting Netflow Distribution with Cauchy Distribution}
+
+
+As shown in the \ref{table:2}, given the incresing number of observations, we could see that the prediction accuracy on a more detailed datasets gets smaller and smaller. In general, 
+the input variables are not able to explain the variation of the trip netflow. Thus, we would like to look
+at \var{netflow} in greater detail.
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+ & Year Data & Month Data & Day Data & Day Data\\
+\hline
+number of records & 1800 & 16821 & 494911 & 494911 \\ 
+\hline
+Year & * & * & * & *   \\
+Month &  & * & *  & *\\
+Day &  &  & * &  \\
+Weekday &  &  &  & * \\ 
+\hline
+R Square & 0.6324 & 0.4356 & 0.1625  & 0.1625 \\
+\hline
+RMSE & 1112.517 & 176.9242 & 12.3269 & 12.3269 \\
+\hline
+\end{tabular}
+\caption{Summary Table of Netflow with Regression Modeling}
+\label{table:2}
+\end{table}
+
+
+%\subsubsubsection{Fitting Netflow Distribution with Cauchy Distribution}
+
+The first step is to investigate the distribution of the \var{netflow}. As shown in the four figures. (Figure \ref{fig:netflow-y-distribution}, Figure \ref{fig:netflow-m-distribution}, Figure \ref{fig:netflow-d-distribution} and Figure \ref{fig:netflow-h-distribution}), \var{netflow} is not normally distributed. Most of the variables are around 0 and the two tails of the distribution are very flat. The non-normal distribution explains the failure of the initial regression models.
+
+<<echo = FALSE>>=
+library(ggplot2)
+trip_netflow_year <- readRDS("trip_netflow_year.rds")
+trip_netflow_month <- readRDS("trip_netflow_month.rds")
+trip_netflow_day <- readRDS("trip_netflow_day")
+trip_netflow_hour <- readRDS("trip_netflow_hour.rds")
+@
+
+
+<<netflow-y-distribution, echo= FALSE, warning = FALSE, fig.cap = "The figure shows the distribution of yearly netflow. We could see that netflow isnot normally distributed. Most of the numbers are around 0 and the two tails are flat. The non-normal distribution explains the failure of the initial regression models.">>=
+ggplot(trip_netflow_year, aes(x =netflow)) + geom_density() 
+
+@
+
+<<netflow-m-distribution, echo = FALSE, warning = FALSE, fig.cap = "The figure shows the distribution of the netflow for the monthly dataset. We could see that netflow is not normally distributed. Most of the numbers are around 0 and the two tails are flat.">>=
+ggplot(trip_netflow_month, aes(x =netflow)) + geom_density()
+@
+
+
+<<netflow-d-distribution, echo = FALSE, warning = FALSE, fig.cap = "The figure shows the distribution of the netflow in the daily traffic dataset. We could see that netflow is not normally distributed. Most of the numbers are around 0 and the two tails are flat.">>=
+ggplot(trip_netflow_day, aes(x =netflow)) + geom_density()
+@
+
+
+<<netflow-h-distribution, echo = FALSE, warning = FALSE, fig.cap = "The figure shows the distribution of the netflow in the hourly traffic dataset. We could see that netflow is not normally distributed. Most of the numbers are around 0 and the two tails are flat. The bandwidth is changed to reduce jaggedness.">>=
+ggplot(trip_netflow_hour, aes(x =netflow)) + geom_density(bw=1.5) +
+  scale_x_continuous(limits = c(-50, 50))
+@
+
+
+<<eval = FALSE, echo = FALSE>>=
+# daily
+x <- trip_netflow_day$netflow
+nls(ecdf(x)(x) ~ (1/pi)*atan((x - mean(x))/a) + 1/2, start = list(a = 0.1), trace = TRUE)
+# hourly
+x1 <- trip_netflow_hour$netflow
+nls(ecdf(x1)(x1) ~ (1/pi)*atan((x1 - mean(x1))/a) + 1/2, start = list(a = 0.1), trace = TRUE)
+
+@
+
+
+<<eval = TRUE, echo = FALSE>>=
+plot_function <- function(data, a){
+  x <- data$netflow
+  q <- min(x):max(x)
+  q1 <- 1/(pi*a*(1+((q-mean(x))/a)^2))
+  test <- as.data.frame(cbind(q, q1))
+  ggplot(data, aes(x = netflow)) + 
+    geom_density() + 
+    geom_line(data = test, aes(x = q, y = q1), color = "red") 
+}
+@
+
+The \var{netflow} distribution looks rall in the center and flat on the two tails. It reminds us of the continuous probability distribution, the Cauchy Distribution.
+
+The Cauchy Distribution has two parameters:
+$x_0$ and $\gamma$. $x_0$ is the mean of the variables and $\gamma > 0 $.
+
+It has the following PDF:
+
+$$ \frac{1}{\pi\gamma(1+(\frac{x-x_0}{\gamma})^2)} $$
+
+CDF: $$\frac{1}{\pi}\arctan(\frac{x-x_0}{\gamma}) + \frac{1}{2}$$
+
+Thus, we use \func{nls} in R to fit the distributions \var{netflow}
+The nls function uses a relative-offset convergence criterion that compares the numerical imprecision at the current parameter estimates to the residual sum-of-squares. The sum-of-sqares reported is the sum of the squared difference between the $\hat x$ produced by the emprical $\gamma$ and acutal value of x.
+
+As shown from the four graphs of fitting the netflow distribution of different levels with Cauchy Distribution (Figure \ref{fig:cauchy-year}, Figure \ref{fig:cauchy-month}, Figure \ref{fig:cauchy-day} and Figure \ref{fig:cauchy-hour}). The Cauchy Distribution fits the \var{netflow} distribution very well for year, month and day. For the hourly data, the Cauchy Distribution underestimates the numbers that are close to 0, since almost 0.5 of the \var{netflow} variables are around 0. Thus, we conclude that the \var{netflow} variables are not normally distributed and could follow the Cauchy Distribution.
+
+<<cauchy-year, echo = FALSE, fig.cap="Fitting the yearly netflow distribution with Cauchy Distribution with $\\gamma$ equals 324.7. The Cauchy Distribution almost perfectly matches the netflow distribution. It is only a little bit smoother than the netflow distribution. The residual sum-of-squares is 2.375.">>=
+plot_function(trip_netflow_year, 324.7)
+@
+
+
+<<cauchy-month, echo=FALSE, fig.cap="Fitting the monthly netflow distribution with Cauchy Distribution with $\\gamma$ equals 42.02. The Cauchy Distribution is able to match the netflow distribution. The residual sum-of-squares is 21.64">>=
+plot_function(trip_netflow_month, 42.02)
+@
+
+
+<<cauchy-day, echo= FALSE, fig.cap = "Fitting the daily netflow distribution with Cauchy Distribution with $\\gamma$ equals 4.312. The Cauchy Distribution matches the netflow distribution. The fitting produces a residual sum-of-squares of 507.9.">>=
+plot_function(trip_netflow_day, 4.312)
+@
+
+
+<<cauchy-hour, echo = FALSE, fig.cap = "Fitting the hourly netflow distribution with Cauchy Distribution with $\\gamma$ equals 1.724. The Cauchy Distribution is able to describe most of the variation. However, Cauchy underestimates the size of the numbers that are close to 0. As shown, the density at 0 is almost 0.5, which means around half of the observations are balanced. The fitting generates a residual sum-of-squares of 19857.">>=
+plot_function(trip_netflow_hour, 1.724)
+@
+

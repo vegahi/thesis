@@ -1,0 +1,135 @@
+\subsection{Netflow Tables Creation}
+
+The tables of netflow are generated in order to understand the total traffic and the difference between inflow and outflow for each stations. There are four netflow datasets, each of them is created from the initial table \var{trips} data, but aggreated by a different level: year, month, day or hour.
+
+For each netflow dataset, two separate sets for inflow and outflow by station. Then the inflow and
+outflow data are joined together by \var{station id}. Meanwhile, the sum of the two is calcualted 
+as the total traffic volume and the difference between the trip outflow and trip inflow is defined
+as the netflow for each station at a given time level.
+
+The following SQL queries show the details of the table generating process.
+
+Create the year level data for all the stations in the system in MySQl
+<<eval= FALSE>>=
+# produce the outflow dataframe
+CREATE TABLE trips_out_year
+SELECT Start_Station_ID, year(Start_Time) as the_year,sum(1) as trips_out
+FROM citibike.trips
+GROUP BY Start_Station_ID, the_year;
+
+# produce the inflow dataframe
+CREATE TABLE trips_in_year
+SELECT End_Station_ID, year(Start_Time) as the_year, sum(1) as trips_in
+FROM citibike.trips
+GROUP BY End_Station_ID, the_year;
+
+# add keys to the tables
+ALTER TABLE `trips_in_year` ADD KEY `station_end_key`(`End_Station_ID`);
+ALTER TABLE `trips_out_year` ADD KEY `station_start_key`(`Start_Station_ID`);
+
+# join the two tables by year and station id
+CREATE TABLE trip_netflow_year
+SELECT Start_Station_ID as ID, a.the_year, 
+  (ifnull(trips_out, 0)-ifnull(trips_in, 0)) as netflow,
+  (trips_in + trips_out) as total
+FROM citibike.trips_out_year a
+INNER JOIN
+citibike.trips_in_year b
+on (a.Start_Station_ID = b.End_Station_ID) AND (a.the_year = b.the_year);
+@
+
+Create the monthly data:
+<<eval= FALSE>>=
+# produce the inflow dataset
+CREATE TABLE trips_out_month
+SELECT Start_Station_ID, year(Start_Time) as the_year, 
+  month(Start_Time) as the_month, sum(1) as trips_out
+FROM citibike.trips
+GROUP BY Start_Station_ID, the_year, the_month;
+
+# produce the outflow dataset
+CREATE TABLE trips_in_month
+SELECT End_Station_ID, year(Start_Time) as the_year, 
+  month(Start_Time) as the_month, sum(1) as trips_in
+FROM citibike.trips
+GROUP BY End_Station_ID, the_year, the_month;
+
+# add keys to the tables
+ALTER TABLE `trips_in_month` ADD KEY `station_end_key`(`End_Station_ID`);
+ALTER TABLE `trips_out_month` ADD KEY `station_start_key`(`Start_Station_ID`);
+
+# join the two tables by station id, year and month
+CREATE TABLE trip_netflow_month
+SELECT Start_Station_ID as ID, a.the_year, a.the_month, 
+  (ifnull(trips_out, 0)-ifnull(trips_in, 0)) as netflow,
+  (trips_in + trips_out) as total
+FROM citibike.trips_out_month a
+INNER JOIN
+citibike.trips_in_month b
+on (a.Start_Station_ID = b.End_Station_ID) AND 
+  (a.the_year = b.the_year) AND 
+  (a.the_month = b.the_month); 
+@
+
+Create the daily level data:
+<<eval = FALSE>>=
+# the outflow data
+CREATE TABLE trips_out_day
+SELECT Start_Station_ID, year(Start_Time) as the_year, 
+  month(Start_Time) as the_month, day(Start_Time) as the_day, 
+  sum(1) as trips_out
+FROM citibike.trips
+GROUP BY Start_Station_ID, the_year, the_month, the_day;
+
+# the inflow data
+CREATE TABLE trips_in_day
+SELECT End_Station_ID, year(Start_Time) as the_year, 
+  month(Start_Time) as the_month, day(Start_Time) as the_day, 
+  sum(1) as trips_in
+FROM citibike.trips
+GROUP BY End_Station_ID, the_year, the_month, the_day;
+
+# add keys to the dataframe
+ALTER TABLE `trips_in_day` ADD KEY `station_end_key`(`End_Station_ID`);
+ALTER TABLE `trips_out_day` ADD KEY `station_start_key`(`Start_Station_ID`);
+
+# join the two tables by station id, year, month and day
+CREATE TABLE trip_netflow_day
+SELECT Start_Station_ID as ID, a.the_year, a.the_month, a.the_day, 
+  (ifnull(trips_out, 0)-ifnull(trips_in, 0)) as netflow,
+  (trips_in + trips_out) as total
+FROM citibike.trips_out_day a
+INNER JOIN
+citibike.trips_in_day b
+on (a.Start_Station_ID = b.End_Station_ID) AND 
+  (a.the_year = b.the_year) AND (a.the_month = b.the_month) 
+  AND (a.the_day = b.the_day); 	
+
+
+@
+
+The hourly data:
+
+Both the inflow and outflow datasets have around 7,000,000 rows of record. Due to the large table size and computation limit of MySQL, the two dataframes are first exported from MySQL and then
+imported into \pkg{R}. 
+<<echo = TRUE, eval= FALSE>>=
+library(readr)
+library(dplyr)
+# load the saved data
+df_in <- readr::read_csv("/Users/vegazhang/Documents/Spring2017/dump/trip_in_hour.csv")
+df_out <- readr::read_csv("/Users/vegazhang/Documents/Spring2017/dump/trip_out_hour.csv")
+# join the two tables
+trip_netflow_hour <- df_in %>%
+  inner_join(df_out, by =c("End_Station_ID" = "Start_Station_ID", 
+                           "the_year" = "the_year", "the_month" = "the_month",
+                           "the_day" = "the_day", "the_hour" = "the_hour")) %>%
+  mutate(netflow = trips_out - trips_in, total = trips_out + trips_in)
+
+@
+
+
+\subsection{Code for Shiny App}
+
+<<echo = FALSE, eval = TRUE, engine='bash', comment=''>>=
+cat /Users/vegazhang/Documents/Spring2017/Thesis/thesis/app_server.R
+@

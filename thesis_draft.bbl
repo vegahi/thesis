@@ -1,7 +1,17 @@
 \begin{thebibliography}{10}
 
 \bibitem{googleCitiBikeStats}
-Citi bike stats.
+{C}iti {B}ike {S}tats.
+\newblock \url{https://sites.google.com/site/citibikestats/}.
+
+\bibitem{gnu}
+gnu.org.
+\newblock \url{https://www.gnu.org/software/make/}.
+
+\bibitem{pkgetl}
+Ben Baumer.
+\newblock {\em etl: Extract-Transform-Load Framework for Medium Data}, 2016.
+\newblock R package version 0.3.4.
 
 \bibitem{baumer2014r}
 Ben Baumer, Mine Cetinkaya-Rundel, Andrew Bray, Linda Loi, and Nicholas~J
@@ -10,68 +20,145 @@ Ben Baumer, Mine Cetinkaya-Rundel, Andrew Bray, Linda Loi, and Nicholas~J
   introductory statistics.
 \newblock {\em arXiv preprint arXiv:1402.1894}, 2014.
 
+\bibitem{pkgrgdal}
+Roger Bivand, Tim Keitt, and Barry Rowlingson.
+\newblock {\em rgdal: Bindings for the Geospatial Data Abstraction Library},
+  2016.
+\newblock R package version 1.2-5.
+
+\bibitem{buckheit1995wavelab}
+Jonathan~B Buckheit and David~L Donoho.
+\newblock {\em Wavelab and reproducible research}.
+\newblock Springer, 1995.
+
+\bibitem{pkgshiny}
+Winston Chang, Joe Cheng, JJ~Allaire, Yihui Xie, and Jonathan McPherson.
+\newblock {\em shiny: Web Application Framework for R}, 2017.
+\newblock R package version 1.0.0.
+
+\bibitem{pkgleaflet}
+Joe Cheng and Yihui Xie.
+\newblock {\em leaflet: Create Interactive Web Maps with the JavaScript
+  'Leaflet' Library}, 2016.
+\newblock R package version 1.0.2.9010.
+
+\bibitem{demaio2009bike}
+Paul DeMaio.
+\newblock Bike-sharing: History, impacts, models of provision, and future.
+\newblock {\em Journal of Public Transportation}, 12(4):3, 2009.
+
+\bibitem{pkgdatatable}
+Matt Dowle and Arun Srinivasan.
+\newblock {\em data.table: Extension of `data.frame`}, 2017.
+\newblock R package version 1.10.4.
+
 \bibitem{faghih2016incorporating}
 Ahmadreza Faghih-Imani and Naveen Eluru.
-\newblock Incorporating the impact of spatio-temporal interactions on bicycle
-  sharing system demand: A case study of new york citibike system.
+\newblock {I}ncorporating the {I}mpact of {S}patio-{T}emporal {I}nteractions on
+  {B}icycle {S}haring {S}ystem {D}emand: {A} {C}ase {S}tudy of {N}ew {Y}ork
+  {C}itibike {S}ystem.
 \newblock {\em Journal of Transport Geography}, 54:218--227, 2016.
 
-\bibitem{gordon2014citi}
-Lily Gordon-Koven and Nolan Levenson.
-\newblock Citi bike takes new york.
-\newblock {\em Rudin Center for Transportation Management and Policy}, 2014.
+\bibitem{pkglubridate}
+Garrett Grolemund and Hadley Wickham.
+\newblock Dates and times made easy with {lubridate}.
+\newblock {\em Journal of Statistical Software}, 40(3):1--25, 2011.
 
-\bibitem{kaufman2015citi}
-Sarah~M Kaufman, Lily Gordon-Koven, Nolan Levenson, and Mitchell~L Moss.
-\newblock Citi bike: The first two years.
-\newblock 2015.
+\bibitem{citibike_about}
+Inc.~Motivate International.
+\newblock {A}bout {C}iti {B}ike: {C}ompany, {H}istory, {M}otivate.
+\newblock \url{https://www.citibikenyc.com/about}.
+
+\bibitem{citibike_pricing}
+Inc.~Motivate International.
+\newblock {C}iti {B}ike {M}embership and {P}ass {O}ptions.
+\newblock \url{https://www.citibikenyc.com/pricing}.
+
+\bibitem{citibike_report}
+Inc.~Motivate International.
+\newblock {C}iti {B}ike {M}onthly {O}perating {R}eports.
+\newblock \url{https://www.citibikenyc.com/system-data/operating-reports}.
+
+\bibitem{citibike_data}
+Inc.~Motivate International.
+\newblock {C}iti {Bi}ke {S}ystem {D}ata.
+\newblock \url{https://www.citibikenyc.com/system-data}.
+
+\bibitem{citibike_app}
+Inc.~Motivate International.
+\newblock {G}et the {C}iti {B}ike {M}obile {A}pp for i{P}hone and {A}ndroid.
+\newblock \url{https://www.citibikenyc.com/how-it-works/app}.
 
 \bibitem{o2015data}
 Eoin O'Mahony and David~B Shmoys.
-\newblock Data analysis and optimization for (citi) bike sharing.
+\newblock {D}ata {A}nalysis and {O}ptimization for ({C}iti) {B}ike {S}haring.
 \newblock In {\em AAAI}, pages 687--694, 2015.
 
-\bibitem{o2015smarter}
-Eoin~Daniel O’Mahony.
-\newblock {\em Smarter tools for (Citi) bike sharing}.
-\newblock PhD thesis, Cornell University, 2015.
+\bibitem{pkgutils}
+{R Core Team}.
+\newblock {\em R: A Language and Environment for Statistical Computing}.
+\newblock R Foundation for Statistical Computing, Vienna, Austria, 2016.
+
+\bibitem{pkgDBI}
+{R Special Interest Group on Databases (R-SIG-DB)}, Hadley Wickham, and Kirill
+  Müller.
+\newblock {\em DBI: R Database Interface}, 2016.
+\newblock R package version 0.5-1.
 
 \bibitem{schneider_2016}
 Todd Schneider.
-\newblock A tale of twenty-two million citi bike rides: Analyzing the nyc bike
-  share system, Jan 2016.
+\newblock {A} {T}ale of {T}wenty-{T}wo {M}illion {C}iti {B}ike {R}ides:
+  {A}nalyzing the {NYC} {B}ike {S}hare {S}ystem.
+\newblock
+  \url{http://toddwschneider.com/posts/a-tale-of-twenty-two-million-citi-bikes-analyzing-the-nyc-bike-share-system/},
+  Jan 2016.
+
+\bibitem{shaheen2010bikesharing}
+Susan Shaheen, Stacey Guzman, and Hua Zhang.
+\newblock Bikesharing in europe, the americas, and asia: past, present, and
+  future.
+\newblock {\em Transportation Research Record: Journal of the Transportation
+  Research Board}, (2143):159--167, 2010.
 
 \bibitem{singhvi2015predicting}
 Divya Singhvi, Somya Singhvi, Peter~I Frazier, Shane~G Henderson, Eoin
   O’Mahony, David~B Shmoys, and Dawn~B Woodard.
-\newblock Predicting bike usage for new york city’s bike sharing system.
+\newblock {P}redicting {B}ike {U}sage for {N}ew {Y}ork {C}ity’s {B}ike
+  {S}haring {S}ystem.
 \newblock In {\em AAAI 2015 Workshop on Computational Sustainability}.
   Citeseer, 2015.
 
-\bibitem{tedeschi2016rebalancing}
-Alexander Tedeschi.
-\newblock {\em Rebalancing citi bike: a geospatial analysis of bike share
-  redistribution in New York City}.
-\newblock PhD thesis, 2016.
-
-\bibitem{2015BicyclesInTheCity}
-Urbica.
-\newblock Bicycles in the city – the data experience, Oct 2015.
-
-\bibitem{2016CityBikeRebalanced}
-Urbica.
-\newblock City bike rebalanced, Apr 2016.
-
 \bibitem{urli2013balancing}
 Tommaso Urli.
-\newblock Balancing bike sharing systems (bbss): instance generation from the
-  citibike nyc data.
+\newblock {B}alancing {B}ike {S}haring {S}ystems (bbss): {I}nstance
+  {G}eneration from the {C}itibike {NYC} {D}ata.
 \newblock {\em arXiv preprint arXiv:1312.3971}, 2013.
 
-\bibitem{wang2016forecasting}
-Wen Wang.
-\newblock Forecasting bike rental demand using new york citi bike data.
-\newblock 2016.
+\bibitem{pkgggplot2}
+Hadley Wickham.
+\newblock {\em ggplot2: Elegant Graphics for Data Analysis}.
+\newblock Springer-Verlag New York, 2009.
+
+\bibitem{pkgrvest}
+Hadley Wickham.
+\newblock {\em rvest: Easily Harvest (Scrape) Web Pages}, 2016.
+\newblock R package version 0.3.2.
+
+\bibitem{pkgtidyr}
+Hadley Wickham.
+\newblock {\em tidyr: Easily Tidy Data with `spread()` and `gather()`
+  Functions}, 2016.
+\newblock R package version 0.6.0.
+
+\bibitem{pkgdplyr}
+Hadley Wickham and Romain Francois.
+\newblock {\em dplyr: A Grammar of Data Manipulation}, 2016.
+\newblock R package version 0.5.0.
+
+\bibitem{pkgxml2}
+Hadley Wickham and James Hester.
+\newblock {\em xml2: Parse XML}, 2016.
+\newblock R package version 1.0.0.
 
 \bibitem{xie2015dynamic}
 Yihui Xie.

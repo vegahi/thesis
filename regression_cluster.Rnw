@@ -1,0 +1,266 @@
+
+<<global_options, include=FALSE>>=
+library(knitr)
+opts_chunk$set(fig.width = 10, fig.height = 5)
+@
+
+
+<<echo = FALSE, message= FALSE>>=
+library(ggplot2)
+library(dplyr)
+trip_netflow_year <- readRDS("trip_netflow_year.rds")
+trip_netflow_month <- readRDS("trip_netflow_month.rds")
+trip_netflow_day <- readRDS("trip_netflow_day")
+trip_netflow_hour <- readRDS("trip_netflow_hour.rds")
+@
+
+
+\subsubsection{Station Clustering: Finding the optimal K}
+As mentioned in the previous section, the netflow volume tends to be a stable property of a station. Given that, we try to improve the model performance by using unsupervised learning techiniques to cluster 
+the stations into groups in order to have a more parsimonious model to understand the netflow.
+We first find the optimal cluster sizes and then feed the cluster information back to the regression models of the network. We illustrate the performance improvement from using different cluster sizes. Then, we relate the clustering results to other variales and come up with suggestions for Citi Bike operation.
+
+The baseline regression models have a lot of categorical varaibles, especially for \var{station id}s. 
+The 600 stations are modeled independently, which creates an over detailed model and 
+incurs overwhelming computational cost. The goal is to extract the essential information from 
+the netflow data and get an overview of the characteristics among stations.
+
+Thus, we begin by using the K-means clustering based on the netflow for daily data.
+Without overfitting the dataset, a desirable \var{K} needs to be as small as possible. In the meantime, it 
+should be able to miminize the total within-cluster sum of squares. two choices of K are decided: one based on the model improvement and one based on our domain knowledge of bike sharing system. 
+
+We average the daily netflow over the entire dataset for all stations and use the aggreated level dataset for K-means clustering. In order to find the optimal cluster number without overfitting the data, 
+we plot the total within-cluster sum of squares against K (Figure~\ref{fig:daily-k-find}) and pick the
+smallest K which explains most of the variation, which is 6. We also mark 3 clusters on the graph, because by our knowledge of bike sharing system, we know that the station groups could be mainly separated as net sources,
+net sinks and neutral groups.
+
+<<echo = FALSE>>=
+trip_netflow_day_avg <- trip_netflow_day %>%
+  group_by(ID) %>%
+  summarise(avg_netflow = mean(netflow))
+
+# finding the optimal number of cluster size
+cluster_size <- 1:10
+sofss <- rep(0,10)
+cluster_results <- as.data.frame(cbind(cluster_size, sofss))
+for (i in 1:10){
+  # use nstart greater than one to have multiple random assignments
+  # aviod getting undesirable local optimum and only report the best results
+  km.out <- kmeans(trip_netflow_day_avg[,2], centers = i, nstart = 20)
+  cluster_results[i,2] <- km.out$tot.withinss
+}
+@
+
+
+Given the 2 cluster sizes: 3 and 6 from K-means. We input the cluster information to the initial regression model. As shown in the \ref{table:2}, 6 clusters are able to explain most of the information in the dataset. The improvment from 6 clusters to all station IDs is much smaller compared to that from 3 clusters to 6 clusters. The results show us that given the stations are simliar in terms of their netflow traffic, we could combine them together into small bigger groups. Knowing which group a station belongs to could help us predict its netflow traffic. The prediction result is close to that with all the station information. The clustering result for 6 is shown in figure (Figure \ref:{6clustersmap}).
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+ & Results & Year Data & Month Data &  Day Data\\
+\hline
+number of records & R Square/ RMSE  & 1800 & 16821 & 494911 \\ 
+\hline
+No IDs & R Square & 2.315*10^-8 & 1.782*10^-7 & 0.00013  \\
+No IDs & RMSE & 1834.997 & 23505073 & 13.4689 \\
+\hline
+3 clusters & R Square  &  0.3275 & 0.2452  & 0.0951 \\
+3 clusters & RMSE & 1504.794 & 204.609 & 12.8136 \\
+\hline
+6 clusters & R Square & 0.5137 & 0.387 &  0.1443 \\
+6 clusters & RMSE & 1279.682 & 184.879 & 12.4603 \\
+\hline
+All IDs & R Square & 0.6324 & 0.4356 &  0.1625 \\
+ALL IDs & RMSE & 1112.517 & 176.9242 &  12.3269 \\
+\hline
+\end{tabular}
+\caption{Summary Table of Netflow Regression Model with Different Cluster Sizes as Input}
+\label{table:3}
+\end{table}
+
+
+<<eval = FALSE, echo = FALSE>>=
+trip_netflow_year <- readRDS("trip_netflow_year.rds")
+trip_netflow_month <- readRDS("trip_netflow_month.rds")
+trip_netflow_day <- readRDS("trip_netflow_day")
+trip_vol_day_sub <- select(trip_vol_day, -total_trip)
+trip_netflow_weekday <- left_join(trip_netflow_day, trip_vol_day_sub, 
+          by = c("the_year" = "year", "the_month" = "month", "the_day" = "day"))
+trip_netflow_year <- trip_netflow_year %>%
+  left_join(trip_netflow_day_avg, by=("ID"))
+trip_netflow_month <- trip_netflow_month %>%
+  left_join(trip_netflow_day_avg, by=("ID"))
+trip_netflow_weekday <- trip_netflow_weekday %>%
+  left_join(trip_netflow_day_avg, by=("ID"))
+
+ff1 <- netflow ~ factor(the_year) 
+a <- lm(ff1, trip_netflow_year)
+summary(a)$r.squared
+sqrt(mean(a$residuals^2))
+
+ff2 <- netflow ~ factor(the_year) + factor(cluster6)
+b <- lm(ff2, trip_netflow_year)
+summary(b)$r.squared
+sqrt(mean(b$residuals^2))
+
+ff3 <- netflow ~ factor(the_year) + factor(the_month) + factor(cluster6)
+c <- lm(ff3, trip_netflow_month)
+summary(c)$r.squared
+# get RMSE
+sqrt(mean(c$residuals^2))
+
+ff7 <- netflow ~ factor(the_year) + factor(the_month) + factor (cluster6) +
+  factor(Weekday) 
+g <- lm(ff7, trip_netflow_weekday)
+summary(g)$r.squared
+# get RMSE
+sqrt(mean(g$residuals^2))
+
+@
+
+
+
+<<daily-k-find, echo=FALSE, fig.cap= "Iteratively perform K-means clustering for different cluster numbers in order to find the optimal cluster size. 6 is chosen to be the best cluster size given that the variance is not decreased significantly afterwards. We also pick the cluster size of 3 based on our knowledge of bike sharing system.">>=
+ggplot(data = cluster_results, aes(x = cluster_size, y = sofss)) + geom_line() +
+ scale_x_continuous(breaks = seq(1, 10, by = 1)) + 
+  geom_point(aes(x = 3, y = 8277.674, color = "red", size = 5)) +
+  geom_point(aes(x = 6, y = 2394.328, color = "red", size = 5)) +
+  theme(legend.position="none") +
+   labs(list(x = "the size of K", 
+             y = "the total within-cluster sum of squares"))
+@
+
+
+
+<<echo = FALSE>>=
+cluster_netflow_day3 <- kmeans(trip_netflow_day_avg[,2], centers = 3, nstart = 20)
+cluster_netflow_day6 <- kmeans(trip_netflow_day_avg[,2], centers = 6, nstart = 20)
+# store the cluster for each stataion
+trip_netflow_day_avg <- trip_netflow_day_avg %>%
+  mutate(cluster3 = cluster_netflow_day3$cluster)
+trip_netflow_day_avg <- trip_netflow_day_avg %>%
+  mutate(cluster6 = cluster_netflow_day6$cluster)
+@
+
+Then, using the 3 and 6 cluster results, we investigate into the relation into \var{netflow} and other variables, such as: \var{total traffic}, \var{start year} and \var{proportion of time used in weekdays}. For each cluster groups, we identify certain characteristics based on these variables.
+
+<<echo = FALSE>>=
+trip_vol_day <- readRDS("trip_vol_day.rds")
+weekday_ratio <- readRDS("weekday_ratio")
+  
+first_use <- trip_netflow_day %>%
+  group_by(ID) %>%
+  summarise(first = min(the_year))
+
+cluster_total_netflow <- trip_netflow_day %>%
+  group_by(ID) %>%
+  summarise(sum_avg = mean(total)) %>%
+  inner_join(trip_netflow_day_avg, by = c("ID"))
+
+cluster_total_netflow <- cluster_total_netflow %>%
+  inner_join(first_use, by = c("ID"))
+
+cluster_total_netflow <- cluster_total_netflow %>%
+  inner_join(weekday_ratio, by = c("ID" = "Start_Station_ID"))
+@
+
+<<sum-netflow6, echo = FALSE, fig.cap= "The relation between average number of trips in a Day and average netflow across years of all stations, colored by 6 differnt cluster groups. We could see that the two extreme source stations have average number of trips above average (No 3230 and 3260). Most of the dots in green also have average number of trips above average. We also notice that the station that has the biggest average number of trips is pretty blanced, station 3263. Station 519 also has the second largest daily traffic volume, but it has bigger positive netflow.">>=
+ggplot(cluster_total_netflow, aes(x = avg_netflow, y = sum_avg, color = factor(cluster6))) +
+  geom_point() +
+  labs(list(x = "Average Netflow Across Years", y = "Average Number of Trips in a Day")) +
+  theme(legend.position="none") +
+  geom_hline(yintercept = 121.02) +
+  annotate("text", label = "mean = 121.02", x = 50,  y = 105.02) +
+  annotate("text", label = "3230", x = 94.29781, y = 361.4639) +
+  annotate("text", label = "3236", x = 63.12929, y = 197.5409 ) +
+  annotate("text", label = "3263", x = -10.18333333, y = 628.8611) +
+  annotate("text", label = "519", x =30.39277298, y = 594.6064)
+@
+
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{stations2.png}
+  \caption{Results from plotting average number of trips with average netflow. 3230 is Penn Station Valet and 3236 is W 42 St & Dyer Ave. One is located near Penn Station and the other is near Port Authority. Since both of them are near major transportaion hubs, it's hard to balance the large number of people who take bikes from there. The highly balanced and heavily used station No. 3263 is Cooper Square & E 7 St, it is in the middle of Washington Square and Tompkins Square Park. No. 519 is Pershing Square North, it has a lot of traffic and people tend to take bikes out more than returning back.}
+  \label{fig:station2}
+\end{figure}
+
+<<eval = FALSE, echo = FALSE>>=
+master_stations <- readRDS("master_stations")
+stations2 <- master_stations %>%
+  filter(ID %in% c("3230","3236", "3263","519"))
+stations3 <- master_stations %>%
+  filter(ID %in% c("3230","3236", "3432", "3253"))
+stations4 <- master_stations %>%
+  filter(ID %in% c("3230","3236", "3432", "3253", "3257"))
+leaflet() %>%
+  addTiles() %>%
+  addCircles(~longitude_avg, ~latitude_avg, color = "red", radius = 60, data = stations4) %>%
+  addCircleMarkers(~longitude_avg, ~latitude_avg, 
+                   label = ~station_name, data = stations4,
+                   labelOptions = labelOptions(noHide = T, direction = 'top', textOnly = T))
+
+master_stations_cluster <- cluster_total_netflow %>%
+  left_join(master_stations, by = "ID")
+leaflet() %>%
+  addTiles() %>%
+  addCircles(~longitude_avg, ~latitude_avg, color =~ifelse(cluster3 == "1",'red',ifelse(cluster3 =="2", 'yellow', 'blue')), radius = 6, data = master_stations_cluster)
+
+leaflet() %>%
+  addTiles() %>%
+  addCircles(~longitude_avg, ~latitude_avg, color =~ifelse(cluster6 == "1",'red',ifelse(cluster6 =="2", 'orange', ifelse(cluster6 == "3", 'pink', ifelse(cluster6 =="4", 'purple', ifelse(cluster6 =="5", "green", "blue"))))), radius = 10, data = master_stations_cluster)  
+
+
+temp1 <- filter(master_stations_cluster, cluster6 == 5)
+leaflet() %>%
+  addTiles() %>%
+  addCircles(~longitude_avg, ~latitude_avg, color = "red", radius = 60, data = temp)
+@
+
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{6clustersmap.png}
+  \caption{The clustering results with 6 clusters, each indicate a group.}
+  \label{fig:6clustersmap}
+\end{figure}
+
+<<firstuse-netflow6, echo=FALSE, fig.cap= "The relation between the first time a station being used and its averaged netflow, colored by 6 different cluster groups. We could see that the extreme source stations are first used in 2015. Some of the sink stations are also new stations, which are first used in 2016">>=
+ggplot(cluster_total_netflow, aes(x = avg_netflow, y = first, color = factor(cluster6))) +
+  geom_point()+
+  labs(list(x = "Average Netflow Across Years", y = "First Time Used"))+
+  theme(legend.position="none") +
+  annotate("text", label = "3230", x = 94.29781, y = 2015) +
+  annotate("text", label = "3236", x = 63.12929, y = 2015) +
+  annotate("text", label = "3432", x = -31, y = 2016) +
+  annotate("text", label = "3253", x = -23, y = 2016)
+@
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{stations3.png}
+  \caption{Results from plotting firt time used and average netflow. 3230 is Penn Station Valet and 3236 is W 42 St & Dyer Ave. These two are near transportation hubs and are first used in 2015. Station 3432 is ike in Movie Night | Prospect Park Bandshell and Station 3253 is Bike The Branches - Central Branch. These two stations are sinks and first used in 2016 and they are located near the Prospect Park in Brooklyn.}
+  \label{fig:station3}
+\end{figure}
+
+<<weekday-netflow6, echo = FALSE, fig.cap= "The relation between the proportion of trips taken place during weekdays and the average netflow, colored by 6 different cluster groups. The graph shows that the source stations No. 3230 and 3236 are mostly being used during weekdays. For sink stations, some of them are only used during weekends, No 3253 and 3257. Station 3432 is acted as a sink station and mostly being used during the weekdays.">>=
+ggplot(cluster_total_netflow, aes(x = avg_netflow, y = ratio, color = factor(cluster6))) +
+  geom_point() +
+  labs(list(x = "Average Netflow Across Years", y = "Proportion of Time Used in Weekdays")) +
+  theme(legend.position="none") +
+  annotate("text", label = "3230", x = 94.29781, y = 1) +
+  annotate("text", label = "3236", x = 63.12929, y = 0.9204) +
+  annotate("text", label = "3253", x = -23.000000, y = 0)+
+  annotate("text", label = "3257", x= -15.000000, y = 0) +
+  annotate("text", label = "3432", x = -31, y = 1)
+@
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{stations4.png}
+  \caption{Results from plotting firt time used and average netflow. 3230 is Penn Station Valet and 3236 is W 42 St & Dyer Ave. These two are near transportation hubs and they are mostly used during weekdays. Station 3432 is ike in Movie Night | Prospect Park Bandshell it is acted as a sink stationa and mostly used during weekdays. Station 3253 is Bike The Branches - Central Branch. These two stations are located near the Prospect Park in Brooklyn. Station 3257 is Adventures NYC, it is located near central park. These two stations are mostly used during weekends.}
+  \label{fig:station4}
+\end{figure}
+
+
+From the relating the clustering groups with other variable, we find that (Figure \ref:{sum-netflow6}) the station that has the maximum average trips per day, tend to be pretty balanced. The station with the second largest averaged daily trips tend to be more as a source station. Combining the results from (Figure \ref:{firstuse-netflow6} and Figure \ref:{weekday-netflow6}), we conclude that the extreme source stations: No. 3230 Penn Station Valet and No.3236 W 42 St Dyer Ave have daily traffic more than the average in the system. The two stations are also newly built in 2015 and are mostly used during weekdays to serve mostly for the commuting purpose. Our guess is that people arrive at Penn Station and Port Authority. They take the bikes out and ride to their destinations. We notice that the previous literature and blog posts emphasize more on the unbalanced problem near the Wall Street Area. However, our findings show that the unbalanced problem around the major transportation hubs.
+
+We also find that the extreme sink stations tend to be pretty new: Station No. 3432 and No. 3253 are used in 2016. Their proportion of time being used during weekdays diverges: 3432 is mostly being used during weekdays while 3253 and 3257 are used during weekends. Station 3432 is Movie Night — Prospect Park Bandshell and 3253 is Bike The Branches - Central Branch. Both are located near the Prospect Park in Brooklyn. Station 3257 is Adventures NYC, it is located near Central Park.
+

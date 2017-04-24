@@ -1,24 +1,30 @@
 
-\subsection{Summary Statistics about Trips}
+<<global_options, include=FALSE>>=
+library(knitr)
+library(webshot)
+library(htmlwidgets)
+opts_chunk$set(fig.width = 10, fig.height = 5)
+@
+
+\subsubsection{Summary Statistics about Trips}
 
 All the analysis are based on the data up until 2016 December.
 
-Connect to the remote SQL database on the Smith server and set up a local directory.
 <<message = FALSE, warning = FALSE>>=
-library(etl)
-library(DBI)
 library(citibike)
-library(utils)
-library(data.table)
 library(lubridate)
 library(ggplot2)
 library(tidyr)
+library(leaflet)
 # example local directory on desktop 
 bikes <- etl("citibike", dir = "~/Desktop/citibike_data", 
              db = src_mysql_cnf("citibike", groups = "scidb"))
 @
 
-15 variables are extracted from the original data and the last variable weekday is added to indicate if the start time is in weekday or not.
+In the \var{trips} dataset, 15 variables are extracted from the original data and the last 
+\var{variable} weekday is added to indicate the index of the day in a week for 
+the given the start time of the trips, where 0 for Monday, 1 for Tuesday and 6 
+for Sunday.
 
 <<>>=
 bikes %>%
@@ -26,50 +32,44 @@ bikes %>%
   head(n = 2) 
 @
 
-Trips:
-See the distribution of bike volume across stations: the top ones are round trips around Central Park.
-<<>>=
-bikes %>%
+We aggregate the trips by station pairs and find that the top four popular route are round trips near central park area. As shown in the figure, we plot the stations that are shown in the top ten popular trip pairs. (Figure \ref{fig:popular-stations}) 
+\begin{figure}
+  \includegraphics[width=\textwidth]{popular_stations.png}
+  \caption{The stations in the first ten popular routes. We notice that the top four popular route are round trips near central park area }
+  \label{fig:popular-stations}
+\end{figure}
+
+
+<<eval = FALSE, echo= FALSE>>=
+trip_distributions <- bikes %>%
   tbl("trips") %>%
+  select(Start_Station_ID, End_Station_ID) %>%
   group_by(Start_Station_ID, End_Station_ID) %>%
   summarise(trip_volume = n()) %>%
-  arrange(desc(trip_volume))
-@
-
-The trip distribution per year by start time: the usage has been increasing since 2013.
-<<>>=
-trip_vol_year <- bikes %>%
-  tbl("trips") %>%
-  mutate(year = YEAR(Start_Time)) %>%
-  group_by(year) %>%
-  summarise(total_trip = n()) %>%
+  arrange(desc(trip_volume)) %>%
   collect()
-ggplot(data = trip_vol_year, aes(year,total_trip)) +
-  geom_bar(stat = "identity", fill ="Light Blue")
 @
 
-The monthly pattern is similar across different years.
-<<>>=
-trip_vol_month <- bikes %>%
-  tbl("trips") %>%
-  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time)) %>%
-  group_by(year, month) %>%
-  summarise(total_trip = n()) %>%
+<<eval = FALSE, echo=FALSE>>=
+popular_stations <- bikes %>%
+  tbl("master_stations") %>%
+  filter(ID %in% c (2006, 281, 499, 387, 514, 426, 435, 509, 519, 492, 519, 
+                    477, 435, 462)) %>%
   collect()
-ggplot(data = trip_vol_month, aes(month,total_trip)) + 
-  geom_line(color ="Light Blue") + facet_wrap(~ year)
+popular_stations
+
 @
 
-The daily usage:
-<<>>=
-trip_vol_day <- bikes %>%
-  tbl("trips") %>%
-  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), day = DAY(Start_Time)) %>%
-  group_by(year, month, day) %>%
-  summarise(total_trip = n()) %>%
-  collect()
-ggplot(data = trip_vol_day, aes(day,total_trip)) + 
-  geom_line(color ="Light Blue") + facet_grid(month~ year)
-@
 
+<< eval = FALSE, echo = FALSE>>=
+leaflet() %>%
+  addTiles() %>%
+  addCircles(~longitude_avg, ~latitude_avg, color = "red", radius = 60, 
+             data = popular_stations, fillOpacity = 0.8) %>%
+  addCircleMarkers(~longitude_avg, ~latitude_avg, label = ~station_name, 
+                   data = popular_stations, 
+                   labelOptions = labelOptions(noHide = T, 
+                                               direction = 'top', textOnly = T))
+
+@
 

@@ -1,0 +1,18 @@
+
+\susection{Discussion}
+
+We start from building the baseline regression models. For the \var{total trip}, we 
+find that the \var{year}, \var{month}, \var{day}, \var{Weekday} and \var{Station id}s are able to explain the variation.
+However, for \var{netflow}, the baseline models are not able to do so. Thus, we extend the analysis on \var{netflow}
+and find the following: First, \var{netflow} does not follow a normal distribution. Instead, a cauchy distribution might be possible.
+Second, for a given station, its netflows are strongly correlated with each other. Given that, are able to cluster the station into groups. We derive two cluster sizes based on model output and our knowledge about bike sharing system. We then compare the performances by feeding back the clustering groups into the inital regression model. To avoid overfitting, we also present the alternative model using Random Forest. The results show us that a cluster size of 6 could tell us almost the same amount of information of the netflow.
+
+Based on the 6 number of clusters, we identify a couple of stations that have extreme positive netflows. These stations are first used in 2015 and located near transportation hubs, which makes them mostly being used during the weekdays. Some stations that are served as extreme sink stations are located in the Prospect Park in Brooklyn and Central Park in Manhattan. These stations also tend to be recently constructed. Some of them are first used in 2016. The results imply that the bike usage patterns around parks and transportation hubs differ. In addition, the uneven bike distribution are more related to the newly constructed stations.
+
+
+Our findings offer a another perspective to look at bike sharing systems: differentiation the purpose of the ride. The idea of the bike sharing systems are derived from the commuting problems that people face. Public sharing bikes help people to commute between their work locations and home. However, our analysis shows that a significant amount of use are related to tourism or leisure time usage. The bikes in New York City are actually also used as a way for people to ride around park areas. Being able to relate the purpose of the ride could also help to solve the more unbalanced bike distribution in the system. If the designers could allocate more bikes near the transportation hubs and decrease the number of bikes near the park area, the system efficiency and ultilization could be improved.
+
+\section{Conclusion} \label{sec:conclusion}
+
+In this thesis, we present the platforms for analyzing the New York City Bike Sharing System (Citi Bike). With this platform, users could easily retrieve the bike trip data on their local machines. The exploratory analysis and interactive visualization help users understand the trip patterns. Focusing on user beavior, we identifiy station usage patterns and propose an alternative way to look at the bike sharing system, the purpose of the trip.
+

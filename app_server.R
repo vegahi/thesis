@@ -7,12 +7,14 @@ library(rgdal)
 library(shiny)
 server <- function(input, output) {
   # database
-  bikes <- dplyr::src_mysql(host = "scidb.smith.edu",dbname = "citibike", user = "wzhang", password = "PedalP0wer")
+  bikes <- src_mysql(host = "scidb.smith.edu",dbname = "citibike", user = "wzhang", password = "PedalP0wer")
   output$total_trip <- renderPrint({
     bikes %>%
       tbl("trips_sub") %>%
-      mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), day = DAY(Start_Time), hour = HOUR(Start_Time)) %>%
-      filter(year == year(input$dates) & month == month(input$dates) & day == day(input$dates) & hour == (input$hours)) %>%
+      mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), 
+             day = DAY(Start_Time), hour = HOUR(Start_Time)) %>%
+      filter(year == year(input$dates) & month == month(input$dates) & 
+               day == day(input$dates) & hour == (input$hours)) %>%
       summarise(total_trip = n())
     
   })
@@ -20,8 +22,10 @@ server <- function(input, output) {
   output$trips_vol <- renderTable({
     bikes %>%
       tbl("trips_sub") %>%
-      mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), day = DAY(Start_Time), hour = HOUR(Start_Time)) %>%
-      filter(year == year(input$dates) & month == month(input$dates) & day == day(input$dates) & hour == (input$hours)) %>%
+      mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), 
+             day = DAY(Start_Time), hour = HOUR(Start_Time)) %>%
+      filter(year == year(input$dates) & month == month(input$dates) & 
+               day == day(input$dates) & hour == (input$hours)) %>%
       group_by(Start_Station_ID, End_Station_ID) %>%
       summarise(trip_volume = n()) %>%
       arrange(desc(trip_volume)) %>%
@@ -31,11 +35,14 @@ server <- function(input, output) {
   output$trip_length <- renderPrint({
     bikes %>%
       tbl("trips") %>%
-      mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), day = DAY(Start_Time), hour = HOUR(Start_Time)) %>%
+      mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), 
+             day = DAY(Start_Time), hour = HOUR(Start_Time)) %>%
       select(Trip_Duration, year, month, day, hour) %>%
-      filter(year == year(input$dates) & month == month(input$dates) & day == day(input$dates) & hour == (input$hours)) %>%
+      filter(year == year(input$dates) & month == month(input$dates) & 
+               day == day(input$dates) & hour == (input$hours)) %>%
       select(Trip_Duration) %>%
-      summarise(mean = mean(Trip_Duration), sd = sd(Trip_Duration), max = max(Trip_Duration), min = min(Trip_Duration))
+      summarise(mean = mean(Trip_Duration), sd = sd(Trip_Duration), 
+                max = max(Trip_Duration), min = min(Trip_Duration))
     
   })
   
@@ -45,9 +52,10 @@ server <- function(input, output) {
     # filter for the date the user entered
     data <- bikes %>%
       tbl("trips_sub") %>%
-      mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), day = DAY(Start_Time), hour = HOUR(Start_Time)) %>%
-      filter(year == year("2013-07-01") & month == month("2013-07-01") & day == day("2013-07-01") & hour == 9) %>%
-      #filter(year == year(input$dates) & month == month(input$dates) & day == day(input$dates) & hour == (input$hours)) %>%
+      mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), 
+             day = DAY(Start_Time), hour = HOUR(Start_Time)) %>%
+      filter(year == year("2013-07-01") & month == month("2013-07-01") & 
+               day == day("2013-07-01") & hour == 9) %>%
       collect(n = Inf)
     master_stations <- bikes %>%
       tbl("master_stations") %>%
@@ -64,7 +72,8 @@ server <- function(input, output) {
         left_join(., master_stations, by = "ID" )
       # create line
       make_line <- function(x){
-        Lines(list(x$line), ID = paste0(x$Start_Station_ID, "-", x$End_Station_ID))
+        Lines(list(x$line), ID = paste0(x$Start_Station_ID, 
+                                        "-", x$End_Station_ID))
       }
       master_stations_sub <- master_stations %>%
         select(-station_name, -all_names) %>%
@@ -75,10 +84,12 @@ server <- function(input, output) {
         na.omit() 
        lines <- bind_rows(
         test %>%
-          select(Start_Station_ID, End_Station_ID, longitude_avg.x, latitude_avg.x) %>%
+          select(Start_Station_ID, End_Station_ID, 
+                 longitude_avg.x, latitude_avg.x) %>%
           rename(lon = longitude_avg.x, lat = latitude_avg.x),
         test %>%
-          select(Start_Station_ID, End_Station_ID, longitude_avg.y, latitude_avg.y) %>%
+          select(Start_Station_ID, End_Station_ID, 
+                 longitude_avg.y, latitude_avg.y) %>%
           rename(lon = longitude_avg.y, lat = latitude_avg.y)) %>%
           arrange(Start_Station_ID, End_Station_ID) %>%
           na.omit() %>%
@@ -87,10 +98,12 @@ server <- function(input, output) {
     # add trip info to the lines data
     lines <- test %>%
       select(trips, Start_Station_ID, End_Station_ID) %>%
-      right_join(., lines, by = c("Start_Station_ID" = "Start_Station_ID", "End_Station_ID" = "End_Station_ID"))
+      right_join(., lines, by = c("Start_Station_ID" = "Start_Station_ID", 
+                                  "End_Station_ID" = "End_Station_ID"))
     # convert into SpatialLines and specify the projection to use
       lines_list <- apply(lines, MARGIN = 1, make_line)
-      segments_sp <- SpatialLines(lines_list, proj4string = CRS("+init=epsg:4326"))
+      segments_sp <- SpatialLines(lines_list,
+                                  proj4string = CRS("+init=epsg:4326"))
     # rename the rownames of lines
       for (i in (1:length(segments_sp))) {
         lines$link[i] <- segments_sp@lines[[i]]@ID
@@ -99,7 +112,8 @@ server <- function(input, output) {
       rownames(lines) <- lines$link
       lines <- as.data.frame(lines)
       # create a spatial lines data frame
-      splndf <- SpatialLinesDataFrame(sl= segments_sp, data = lines, match.ID = TRUE)
+      splndf <- SpatialLinesDataFrame(sl= segments_sp, 
+                                      data = lines, match.ID = TRUE)
       mylines_ll <- sp::spTransform(segments_sp, CRS("+init=epsg:4326"))
       # create the palette
       pal <- leaflet::colorNumeric( palette = "Blues", domain = splndf$trips)
@@ -108,8 +122,12 @@ server <- function(input, output) {
       leaflet() %>%
         addTiles() %>%
         #addProviderTiles("Esri.WorldImagery") %>%
-        addPolylines(data = splndf,color = ~ pal(trips), weight = ~((trips-1) *10), noClip = TRUE,  fillOpacity = 100, group = "Trips")%>%
-        addCircles(data = nodes, lng = ~longitude_avg, lat = ~latitude_avg, weight = 1, radius = ~ total_trips * 5 , popup = ~station_name, color = "black", group = "Stations") %>%
+        addPolylines(data = splndf,color = ~ pal(trips), 
+                     weight = ~((trips-1) *10), noClip = TRUE,  
+                     fillOpacity = 100, group = "Trips")%>%
+        addCircles(data = nodes, lng = ~longitude_avg,lat = ~latitude_avg, 
+                   weight = 1, radius = ~ total_trips * 5, 
+                   popup = ~station_name, color = "black", group = "Stations") %>%
         setView(-73.9,40.7, zoom = 11) %>%
         addLayersControl(overlayGroups = c("Stations", "Trips"))
   }
@@ -121,15 +139,11 @@ ui <- fluidPage(
   titlePanel("CitiBike Data Analysis"),
   
   navbarPage("My Application",
-             # tabPanel("Trip by Year",
-             #          plotOutput("yearPlot")),
-             # tabPanel("Trip by Month",
-             #          plotOutput("monthPlot")),
-             # tabPanel("Trip by Day",
-             #          plotOutput("dayPlot")),
              tabPanel("Summary Statistics",
                       # date input
-                      dateInput("dates","Date", value = "2013-07-01", min ="2013-07-01", max ="2016-12-31", startview = "year"),
+                      dateInput("dates","Date", value = "2013-07-01", 
+                                min ="2013-07-01", max ="2016-12-31", 
+                                startview = "year"),
                       # hour input
                       numericInput("hours", "Hour",
                                    value = 9, min = 0, max = 24, step = 1),
@@ -144,22 +158,15 @@ ui <- fluidPage(
              ),
              tabPanel("Trip Map",
                       # date input
-                      dateInput("dates","Date", value = "2013-07-01", min ="2013-07-01", max ="2016-12-31", startview = "year"),
+                      dateInput("dates","Date", value = "2013-07-01", 
+                                min ="2013-07-01", max ="2016-12-31", 
+                                startview = "year"),
                       # hour input
                       numericInput("hours", "Hour",
                                   value = 9, min = 0, max = 24, step = 1),
                       leafletOutput("map"))
-             # navbarMenu("More",
-             #            tabPanel("Sub-Component A"),
-             #            tabPanel("Sub-Component B"))
+
   ),
-  # mainPanel("Trip Map",
-  #           # date input
-  #           dateInput("dates","Date", value = "2013-07-01", min ="2013-07-01", max ="2016-12-31", startview = "year"),
-  #           # hour input
-  #           numericInput("hours", "Hour",
-  #                        value = 9, min = 0, max = 24, step = 1),
-  #           leafletOutput("map") )
   mainPanel()
 )
 

@@ -1,19 +1,18 @@
-library(etl)
-library(DBI)
-library(citibike)
+library(RMySQL)
 library(utils)
-library(data.table)
 library(lubridate)
 library(ggplot2)
 library(leaflet)
 library(rgdal)
 library(shiny)
 server <- function(input, output) {
-  # database
+  # connect to the database
+  bikes <- src_mysql(host = "scidb.smith.edu",dbname = "citibike", user = "wzhang", password = "PedalP0wer")
   bikes <- etl("citibike", dir = "~/Desktop/citibike_data", db = src_mysql(host = "scidb.smith.edu",dbname = "citibike", user = "wzhang", password = "PedalP0wer"))
    output$total_trip <- renderPrint({
     bikes %>%
       tbl("trips_sub") %>%
+      head()
       mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), day = DAY(Start_Time), hour = HOUR(Start_Time)) %>%
       filter(year == year(input$dates) & month == month(input$dates) & day == day(input$dates) & hour == (input$hours)) %>%
       summarise(total_trip = n())
@@ -27,7 +26,8 @@ server <- function(input, output) {
        filter(year == year(input$dates) & month == month(input$dates) & day == day(input$dates) & hour == (input$hours)) %>%
        group_by(Start_Station_ID, End_Station_ID) %>%
        summarise(trip_volume = n()) %>%
-       arrange(desc(trip_volume))
+       arrange(desc(trip_volume)) %>%
+       head(n = 10)
    })
    
    output$trip_length <- renderPrint({
@@ -37,8 +37,7 @@ server <- function(input, output) {
        select(Trip_Duration, year, month, day, hour) %>%
        filter(year == year(input$dates) & month == month(input$dates) & day == day(input$dates) & hour == (input$hours)) %>%
        select(Trip_Duration) %>%
-       summarise(mean = mean(Trip_Duration), median = median(Trip_Duration), sd = sd(Trip_Duration), max = max(Trip_Duration), min = min(Trip_Duration),
-                 IQR = IQR(Trip_Duration))
+       summarise(mean = mean(Trip_Duration), sd = sd(Trip_Duration), max = max(Trip_Duration), min = min(Trip_Duration))
        
    })
    # output$yearPlot <- renderPlot({
@@ -199,14 +198,14 @@ ui <- fluidPage(
                       
                       h4("Trip Length"),
                       verbatimTextOutput("trip_length")
-                      ),
-             tabPanel("Trip Map",
-                      # date input
-                      dateInput("dates","Date", value = "2013-07-01", min ="2013-07-01", max ="2016-12-31", startview = "year"),
-                      # hour input
-                      numericInput("hours", "Hour",
-                                  value = 9, min = 0, max = 24, step = 1),
-                      leafletOutput("map"))
+                      )
+             # tabPanel("Trip Map",
+             #          # date input
+             #          dateInput("dates","Date", value = "2013-07-01", min ="2013-07-01", max ="2016-12-31", startview = "year"),
+             #          # hour input
+             #          numericInput("hours", "Hour",
+             #                      value = 9, min = 0, max = 24, step = 1),
+             #          leafletOutput("map"))
              # navbarMenu("More",
              #            tabPanel("Sub-Component A"),
              #            tabPanel("Sub-Component B"))

@@ -1,0 +1,240 @@
+
+<<global_options, include=FALSE>>=
+library(knitr)
+opts_chunk$set(fig.width = 10, fig.height = 5)
+@
+
+
+<<echo = FALSE, message= FALSE>>=
+library(citibike)
+library(lubridate)
+library(ggplot2)
+library(tidyr)
+library(scales)
+# example local directory on desktop 
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", 
+             db = src_mysql_cnf("citibike", groups = "scidb"))
+@
+
+We would also like to know about the total number of trips across years and
+months, based on the \var{Start Time}.
+
+Citi Bike first started in 2013. With the increasing number of users and more 
+stations added into the system, the total number of trips is growing every year.
+The total trip number starts from 5 million in 2013 (starts from 2013 July) to 
+14 million in 2016. (Figure \ref{fig:trips-year})
+
+\end{doublespacing}
+
+<<echo = FALSE, eval= FALSE>>=
+trip_vol_year <- bikes %>%
+  tbl("trips") %>%
+  mutate(year = YEAR(Start_Time)) %>%
+  group_by(year) %>%
+  summarise(total_trip = n()) %>%
+  collect()
+
+@
+
+
+<<echo = FALSE>>=
+trip_vol_year <- readRDS("trip_vol_year.rds")
+@
+
+<<trips-year, echo=FALSE, fig.cap="The total trip distribution across years">>=
+ggplot(data = trip_vol_year, aes(year,total_trip)) +
+  geom_bar(stat = "identity", fill ="Light Blue") +
+  labs(list(x = "Year", y = "Total Number of Trips")) +
+  geom_text(data=trip_vol_year,aes(x = year,y = total_trip, 
+                                   label = total_trip), vjust=0)
+@
+
+
+The monthly usage shows a similar pattern that people tend to use less 
+during the winter time compared to the rest of the year. (Figure \ref{fig:trips-month})
+The maximum is 1648856, which took place in 2016 September; the minimum is 
+196930 during Feburary of 2015. Comparing the ratios between the two, the
+maximum use is around 8 time of the minimum.
+
+
+
+<<echo = FALSE, eval= FALSE>>=
+trip_vol_month <- bikes %>%
+  tbl("trips") %>%
+  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time)) %>%
+  group_by(year, month) %>%
+  summarise(total_trip = n()) %>%
+  collect()
+
+@
+
+
+<<echo = FALSE>>=
+trip_vol_month <- readRDS("trip_vol_month.rds")
+@
+
+
+<<trips-month, echo=FALSE, fig.cap="The total trip distribution across months">>=
+ggplot(data = trip_vol_month, aes(month, total_trip)) + 
+  geom_line(color ="Light Blue") + facet_wrap(~ year) +
+  labs(list(x = "Month", y = "Total Number of Trips")) +
+  scale_x_continuous(breaks = 1:12)
+@
+
+
+The daily usage:
+
+The following graph shows the use difference across the day of month for all 
+four years. (Figure \ref{fig:trips-day}) Horizontally, the shape is similar for 
+the same month across years. Vertically, the pattern shows a slight increase 
+through years. The figure also shows the surges and declines during a month.
+
+
+<<echo = FALSE, eval= FALSE>>=
+trip_vol_day <- bikes %>%
+  tbl("trips") %>%
+  select(Start_Time, Weekday, DayOfWeek, WeekOfYear) %>%
+  mutate(year = YEAR(Start_Time), month = MONTH(Start_Time), 
+         day = DAY(Start_Time)) %>%
+  group_by(year, month, day, Weekday, DayOfWeek, WeekOfYear) %>%
+  summarise(total_trip = n()) %>%
+  collect()
+@
+
+
+<<echo = FALSE>>=
+trip_vol_day <- readRDS("trip_vol_day.rds")
+@
+
+
+<<trips-day, echo=FALSE, fig.cap="The total trip distribution by days of month",message= FALSE>>=
+ggplot(data = trip_vol_day, aes(day, total_trip)) + 
+  geom_line(color = "Light Blue") + facet_grid(month ~ year) +
+  labs(list(x = "Day of Month", y = "Total Number of Trips"))
+@
+
+
+We would like to know if declines are related to the fact that if it's in weekend.
+Thus, we combine the weekend information from the \func{trips} table, separate the 
+\var{trip\_vol\_day} datasets by year and use heatmap
+to show the daily trip use across years. The following four graphs are generated to 
+illustrate the daily trip volume in 2013 (Figure \ref{fig:trips-day-2013}), 2014 (Figure \ref{fig:trips-day-2014}), 2015(Figure \ref{fig:trips-day-2015}) and 2016(Figure \ref{fig:trips-day-2016}). Unlike the three other ones, the graph of 2013 (Figure \ref{fig:trips-day-2013}) only has six columns due to the fact that the recorded data starts from 2013 July.
+
+On each graph, the darkness represents the trip volume of that day relative to the total of the year.
+In other words, the traffic at each day is weighted over the total of the year. A darker shade of the
+blue represents more people used Citi Bike in that day. On top of the heatmap are the dots. The black
+dots mark the days that are during the weekend, the light points stand for the weekdays.
+
+Looking at the figures, we could tell that bikes are more heavily used during summer time
+in New York City. Some of the usage declines are due to the weekend influence, while
+others are not.
+
+
+
+<<echo = FALSE>>=
+trip_vol_day2013 <- filter(trip_vol_day,  year == 2013)
+trip_vol_day2014 <- filter(trip_vol_day,  year == 2014)
+trip_vol_day2015 <- filter(trip_vol_day,  year == 2015)
+trip_vol_day2016 <- filter(trip_vol_day,  year == 2016)
+trip_vol_day2013 <- trip_vol_day2013 %>%
+  mutate(total_trip_weight = total_trip/sum(trip_vol_day2013$total_trip))
+trip_vol_day2014 <- trip_vol_day2014 %>%
+  mutate(total_trip_weight = total_trip/sum(trip_vol_day2014$total_trip))
+trip_vol_day2015 <- trip_vol_day2015 %>%
+  mutate(total_trip_weight = total_trip/sum(trip_vol_day2015$total_trip))
+trip_vol_day2016 <- trip_vol_day2016 %>%
+  mutate(total_trip_weight = total_trip/sum(trip_vol_day2013$total_trip))
+color_function <- function(x){ifelse(x < 1, 1, 0)}
+@
+
+
+<<trips-day-2013, echo=FALSE, fig.cap="The total trip distribution by days of month in 2013">>=
+ggplot(trip_vol_day2013, aes(month, day)) + 
+  geom_tile(aes(fill = total_trip_weight), colour = "white")+
+  scale_fill_gradient(low = "white", high = "steelblue") + 
+  geom_point(aes(month, day, alpha = color_function(Weekday))) + 
+  guides(alpha = FALSE) 
+@
+
+<<trips-day-2014, echo=FALSE, fig.cap="The total trip distribution by days of month in 2014">>=
+ggplot(trip_vol_day2014, aes(month, day)) + 
+  geom_tile(aes(fill = total_trip_weight), colour = "white")+
+  scale_fill_gradient(low = "white", high = "steelblue") + 
+  scale_x_continuous(breaks = 1:12) + 
+  geom_point(aes(month, day, alpha = color_function(Weekday))) + 
+  guides(alpha = FALSE) 
+@
+
+<<trips-day-2015, echo=FALSE, fig.cap="The total trip distribution by days of month in 2015">>=
+ggplot(trip_vol_day2015, aes(month, day)) + 
+  geom_tile(aes(fill = total_trip_weight), colour = "white")+
+  scale_fill_gradient(low = "white", high = "steelblue") + 
+  scale_x_continuous(breaks = 1:12) + 
+  geom_point(aes(month, day, alpha = color_function(Weekday))) + 
+  guides(alpha = FALSE) 
+@
+
+<<trips-day-2016, echo=FALSE, fig.cap="The total trip distribution by days of month in 2016">>=
+ggplot(trip_vol_day2016, aes(month, day)) + 
+  geom_tile(aes(fill = total_trip_weight), colour = "white")+
+  scale_fill_gradient(low = "white", high = "steelblue") + 
+  scale_x_continuous(breaks = 1:12) + 
+  geom_point(aes(month, day, alpha = color_function(Weekday))) +
+  guides(alpha = FALSE) 
+@
+
+
+Notice that the four-day data from 23 to 26 in January 2016 is not showing on the plot.
+After checking with the original zip files provided by Citi Bike website, we find that
+these records do not exist in the file.
+
+Instead of marking the weekdays, we could also plot the daily trip volume with 
+the idea of a calendar. The x axis shows the day of the week, while 1 = Sunday, 
+2 = Monday ,..., 7 = Saturday. The y axis represents the week of the year.
+
+
+<<calendar2013, echo = FALSE, fig.cap= "Daily trip distribution in calendar mode of 2013">>=
+ggplot(filter(trip_vol_day2013,WeekOfYear !=1), aes(DayOfWeek, WeekOfYear)) + 
+  geom_tile(aes(fill = total_trip_weight), colour = "white")+
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  scale_x_continuous(breaks = 1:7, 
+                     labels = c("Sunday", "Monday", "Tuesday", "Wednesday", 
+                                "Thursday", "Friday", "Saturday")) 
+@
+Notice that we here exclude the two blue boxes of 12-30-2013 and 12-31-2013 which are in the first week of year of 2014.
+
+<<calendar2014, echo = FALSE, fig.cap= "Daily trip distribution in calendar mode of 2014">>=
+ggplot(trip_vol_day2014, aes(DayOfWeek, WeekOfYear)) + 
+  geom_tile(aes(fill = total_trip_weight), colour = "white")+
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  scale_x_continuous(breaks = 1:7, 
+                     labels = c("Sunday", "Monday", "Tuesday", "Wednesday",
+                                "Thursday", "Friday", "Saturday")) 
+@
+
+
+<<calendar2015, echo = FALSE, fig.cap= "Daily trip distribution in calendar mode of 2015">>=
+ggplot(trip_vol_day2015, aes(DayOfWeek, WeekOfYear)) + 
+  geom_tile(aes(fill = total_trip_weight), colour = "white")+
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  scale_x_continuous(breaks = 1:7, 
+                     labels = c("Sunday", "Monday", "Tuesday", "Wednesday",
+                                "Thursday", "Friday", "Saturday")) 
+@
+
+
+<<calendar2016, echo = FALSE, fig.cap= "Daily trip distribution in calendar mode of 2016">>=
+ggplot(trip_vol_day2016, aes(DayOfWeek, WeekOfYear)) + 
+  geom_tile(aes(fill = total_trip_weight), colour = "white")+
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  scale_x_continuous(breaks = 1:7, 
+                     labels = c("Sunday", "Monday", "Tuesday", "Wednesday",
+                                "Thursday", "Friday", "Saturday")) 
+@
+
+
+
+
+
+
+

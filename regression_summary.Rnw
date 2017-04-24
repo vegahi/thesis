@@ -1,0 +1,46 @@
+
+<<global_options, include=FALSE>>=
+library(knitr)
+library(dplyr)
+library(ggplot2)
+opts_chunk$set(fig.width = 10, fig.height = 5)
+@
+
+
+\subsubsection{Netflow Correlation of a Station}
+
+In order to understand the relation between \var{netflow} and \var{station}, we would like
+to know if the netflow at a station in one day is correlated to that of another day in the same year.
+Thus, we randomly assigns group numbers (either 1 or 2 with equal probability) to the daily netflow dataset. Then, we aggregate both by \var{year}, \var{ID} and \var{group}. Each station in a year will have two averaged netflow volume. As shown in the graph (Figure \ref{fig:netflow_correlation}), each point on the graph represent the averaged netflow traffic volume of a station in a year. The two axes represent the 
+average netflow volme of a station by randomly breaking the yearly data of a station into two groups.
+
+We could see that the averaged netflow of a station during half the time of the year is strongly correlated with the averaged netflow in the rest time of the year. Thus, the netflow of a station is stable and could be treated as a property of that station.
+
+<<echo = FALSE>>=
+trip_netflow_day <- readRDS("trip_netflow_day")
+trip_netflow_day$group <- sample(1:2, size = nrow(trip_netflow_day), 
+                prob = c(0.5,0.5), replace = TRUE)
+trip_netflow_day_sumamrise <- trip_netflow_day %>%
+  group_by(the_year, ID, group) %>%
+  summarise(avg_netflow = mean(netflow))
+trip_netflow_day_plot <- inner_join(filter(trip_netflow_day_sumamrise, group ==1), 
+           filter(trip_netflow_day_sumamrise, group ==2),
+           by = c("the_year", "ID"))
+@
+
+
+<<echo = FALSE, eval = FALSE>>=
+cor(trip_netflow_day_plot$avg_netflow.x, trip_netflow_day_plot$avg_netflow.y)
+@
+
+<<netflow_correlation, echo=FALSE, fig.cap= "The correlation of the averaged netflow across stations by year. The correlation between the netflow during the half time of the year and other is around 0.94, which indicates that the netflow of a station is stable and could be treated as a station characteristic. Each point on the graph represents the averaged netflow traffic volume of a station in a year. The two axes denote the averaged netflow volme of a station by randomly breaking the yearly data of a station into two groups">>=
+ggplot(data = trip_netflow_day_plot, 
+       aes(x = avg_netflow.x, y = avg_netflow.y)) +
+  geom_point() + facet_wrap(~the_year)
+
+@
+
+
+
+
+
