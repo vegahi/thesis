@@ -3,6 +3,8 @@
 \usepackage{fancyhdr}
 \usepackage{lastpage}
 \usepackage{url}
+\usepackage{textcomp}
+%\usepackage{cleveref}
 
 \setlength{\textheight}{9.0in}
 \setlength{\topmargin}{0.0in}
@@ -30,8 +32,7 @@
   \usepackage{setspace}
 % Headers and footers personalization using the `fancyhdr' package
 
-\fancyhead[R]{Page \thepage \hspace{1pt}  of \pageref{LastPage}
-}
+%\fancyhead[R]{Page \thepage \hspace{1pt}  of \pageref{LastPage}}
 \usepackage{soul,xspace}
 \newcommand{\R}{{\sf R}\xspace}
 
@@ -41,18 +42,9 @@
 \begin{document}
 %\bibliographystyle{plain}
 
-<<setup, include=FALSE, cache=FALSE, echo=FALSE>>=
-setwd("~/Documents/Spring2017/Thesis/thesis")
-Sys.setenv(TEXINPUTS=getwd(),
-           BIBINPUTS=getwd(),
-           BSTINPUTS=getwd())
-
-@
-
-
 %%%%%%%%%%%%%%%%SUMMARY SHEET%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%
 \thispagestyle{empty}
-\setcounter{page}{0}
 \begin{center}
 \begin{minipage}{0.75\linewidth}
     \centering
@@ -68,17 +60,19 @@ Sys.setenv(TEXINPUTS=getwd(),
     \vspace{3cm}
 %Degree
     {\Large Submitted to the Program in Statistical \& Data Sciences (SDS) of Smith College\par}
-    \vspace{3cm}
+    \vspace{2cm}
     %Advisor
      {\Large Ben Baumer,  Primary Honors Thesis Advisor \\
-     R.Jordan Crouser,  Secondary Honors Thesis Reader \\}
-    \vspace{3cm}
+     R. Jordan Crouser,  Secondary Reader \\}
+    \vspace{2cm}
 %Date
     {\Large April 2017}
 \end{minipage}
 \end{center}
 \clearpage
- 
+
+
+\clearpage 
 \section*{Acknowledgements}
 \thispagestyle{empty}
 
@@ -88,11 +82,11 @@ Sys.setenv(TEXINPUTS=getwd(),
 
 \section*{Abstract}
 
-As the benefits of bike sharing systems around the world become widely appreciated,
-more research in this area is warranted.
+As the benefits of bike sharing systems around the world become more widely appreciated,
+additional research in this area is warranted.
 An example is the growing focus on the New York City Bike Sharing System (Citi Bike). 
-The Citi Bike website contains publicly accessible data on 60 million trips.
-This describes platforms for users to retrieve information easily, which faciliatates further analysis. 
+The Citi Bike website contains publicly accessible data on 60 million trips from 2013 to present.
+This thesis describes platforms for users to retrieve information easily, which facilitates further analysis. 
 We present an interactive visualization to display the trip information. 
 Additionally, by concentrating on user behaviors, we model the user demand at docking stations for bike rental and return.
 
@@ -100,16 +94,17 @@ Additionally, by concentrating on user behaviors, we model the user demand at do
 \thispagestyle{empty}
 
 
-
 \clearpage
-
-
-\listoffigures
-\listoftables
-
+\thispagestyle{empty}\listoffigures
+%\listoffigures
+\clearpage
+\thispagestyle{empty}\listoftables
+%\listoftables
 %%%%%%%%%%%%%% CONTENTS %%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\setcounter{page}{0}
+%\setcounter{page}{0}
+%\clearpage
+\addtocontents{toc}{\protect\thispagestyle{empty}}
 \small
 \newpage
 \tableofcontents
@@ -117,9 +112,10 @@ Additionally, by concentrating on user behaviors, we model the user demand at do
 %%%%%%%%%%%%%%%%%%%%%% MAIN PAPER %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 
+\fancyhead[R]{Page \thepage \hspace{1pt}  of \pageref{LastPage}}
+\setcounter{page}{1}
 \section{Introduction} \label{sec:intro}
-\begin{doublespacing}
-\end{doublespacing}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -127,17 +123,17 @@ Additionally, by concentrating on user behaviors, we model the user demand at do
 
 
 Bike sharing systems continue to have a large influence on urban environments. 
-Citi Bike~\cite{citibike_about} provides a low-cost, healthy and environmental transportation system to New Yorkers. 
-With the continuous system expansiton, a great deal of attention~\cite{o2015data} \cite{o2015smarter} \cite{singhvi2015predicting} \cite{urli2013balancing} \cite{faghih2016incorporating} \cite{gordon2014citi} has been focused on the various issues arising from maintaining the system. 
-Citi Bike posts the trip information on its website, which contains a lot of hidden information regarding bike fleet and user demand at differnt locations. 
-Unfortunately, due to computational and software limitations, they have only utilized a small portion, leaving the large scale of data unexploited. 
-The Citi Bike dataset contains 60 milions trips starting from mid 2013 to the end of 2016. The raw data takes around 6GB of storage space, which falls in the range of medium-sized data. Since the dataset is too big to fit memory but could be stored on the hard disk, special tools
+The New York City Bike Sharing System~\cite{citibike_about} provides a low-cost, healthy and environmentally friendly alternative for residents of New York City. 
+With the continuous system expansion, a great deal of attention has been focused on the various issues arising from maintaining the system~\cite{o2015data,o2015smarter,singhvi2015predicting,urli2013balancing,faghih2016incorporating,gordon2014citi,kaufman2015citi,wang2016forecasting,tedeschi2016rebalancing,2015BicyclesInTheCity,2016CityBikeRebalanced,schneider_2016}. 
+Citi Bike posts trip information on its website, which contains a lot of information regarding bike fleet and user demand at different locations. 
+Unfortunately, due to computational and software limitations, previous researchers have only utilized a small portion, leaving the bulk of the data unexplained. 
+The Citi Bike dataset contains 60 million trips starting from mid-2013 to the end of 2016. The raw data takes around 6GB of storage space, which falls in the range of medium-sized data. Since the dataset is too big to fit memory but could be stored on the hard disk, special tools
 need to be developed.
-Thus, one goal of this work is to develop a free publicly available tool that faciltates the data acquisition process for inviduals interested in Citi Bike, and that functions well under normal computational resource constraints.
-After gathering and organizing the data, more intepretable initial analysis needs to be provided to help users gain more meaningful insight. We present a flexible interactive visualization platform to enable users to identify underlying patterns of the use of New York City Bike Sharing System.
+Thus, one goal of this work is to develop a free, publicly-available tool that facilitates the data acquisition process for individuals interested in Citi Bike, and that functions well under normal computational resource constraints.
+After gathering and organizing the data, a more interpretable initial analysis needs to be provided to help users gain more meaningful insight. We present a flexible interactive visualization platform to enable users to identify underlying patterns of the use of Citi Bike.
 
-As of this writing, this project encompasses the largest volume of data so far in terms of the studies related to Citi Bike. Moreover, the development of a standard R package enables more open, equitable access to this data. Initial statistical modeling results help us to better understand how riders use bike sharing systems and stations over time.
-These results will help further system design and utlization, along with the improvement of user experience.
+As of this writing, this project encompasses the largest volume of data so far in terms of the studies related to Citi Bike. Moreover, the development of a standard \R package enables more open, equitable access to this data. Initial statistical modeling results help us to better understand how riders use bike sharing systems and stations over time.
+These results will help further system design and utilization, along with the improvement of user experience.
 
 
 
@@ -145,13 +141,20 @@ These results will help further system design and utlization, along with the imp
 
 \subsection{Background: About Citi Bike} \label{sec:background}
 
-Citi Bike is New York City's bike share system -- the largest in the nation~\cite{citibike_about}. This system was launched in May 2013, sponsored by Citibank and operated by Motivate, who is the manager of all the largest bike share systems in the United States. Citi Bike started with 6000 bikes and 332 stations in Manhattan and Brooklyn. With increased sponsorship, an expansion in August 2015 brought 140 new stations and doubled the network to 12,000 bikes. Citi Bike has become an integral part of the public transportation network, and it is available to use year round at stations across Manhattan, Brooklyn, Queens, and Jersey City.
+Citi Bike is New York City's bike share system -- the largest in the nation~\cite{citibike_about}. This system was launched in May 2013, sponsored by Citibank and operated by Motivate, who operates over 66\% the United States bike share fleet. Citi Bike started with 6000 bikes and 332 stations in Manhattan and Brooklyn. With increased sponsorship, an expansion in August 2015 brought 140 new stations and doubled the fleet to 12,000 bikes. Citi Bike has become an integral part of the public transportation network, and it is available to use year round at stations across Manhattan, Brooklyn, Queens, and Jersey City.
 
-Like other bike share systems, Citi Bike allows users to take one-way trips by unlocking a bujefrom the origin and returning to a different destination. Congestion in automobile traffic makes Citi Bike an appealing way for people to move around in New York City. There are three plans for users to choose from: the single ride, day pass, and annual membership. Regardless of which plan you choose, the maximum length of for a single ride is 45 minutes~\cite{citibike_pricing}. However, the number of rides is unlimited.
+Like other bike share systems, Citi Bike allows users to take one-way trips by unlocking a bike from the origin and returning it to a different destination. Congestion in automobile traffic makes Citi Bike an appealing way for people to move around in New York City. There are three plans for users to choose from: a single ride, day pass, and annual membership. Regardless of which plan you choose, the maximum length of a single ride is 45 minutes~\cite{citibike_pricing}. The number of rides is unlimited.
 
-Citi Bike provides real-time data regarding station and bike availability to the public. Users may use the Citi Bike mobile app to view the details on the map~\cite{citibike_app}. Citi Bike also offers downloadable files of trip information~\cite{citibike_data}. Monthly operating reports are also presented to the NYC Department of Transportation.
+Citi Bike provides real-time data regarding station and bike availability to the public. Users may use the Citi Bike mobile app to view details on a map~\cite{citibike_app}. Figure \ref{fig:citibike_app} shows the Citi Bike Mobile App. The app provides real-time availability information and ride statistics. It also allows users to purchase passes through the app. Citi Bike also offers downloadable files of trip information~\cite{citibike_data}. Monthly operating reports are also presented to the NYC Department of Transportation.
 
-Bikes are likely to be clustered around certain geographical areas while leaving others with a lack of bikes. Throughout its operation, maintenance and rebalancing have been two major challenges~\cite{citibike_report}. Citi Bike technicians conduct inspections and repairs through the month. Box trucks, vans, contracted trikes, articulated trikes and valets are used to redistribute the bikes. However, using external arrangement to redistribute bikes both introduces extra cost and increases air popllution. Hiring workers to redistribute bikes will increase the cost of the program. Moving bikes with trucks and vans will generate air pollution, which is against the environmentally friendly idea of the bike sharing system.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.7\textwidth]{citibike_app.jpeg}
+  \caption{The Citi Bike Mobile App uses a color-coded map to see stations nearby and real-time bike and dock availability. A pass could be purchased through the app. Users could also unlock a bike using the mobile app. The ride statistics are also recorded.}
+  \label{fig:citibike_app}
+\end{figure}
+
+Throughout its operation, maintenance and rebalancing have been two major challenges~\cite{citibike_report}. Intuitively, variations in traffic and use patterns result in bikes being clustered around certain geographical areas, leaving others with a lack of bikes.  Citi Bike technicians conduct inspections and repairs through the month and box trucks, vans, contracted trikes, articulated trikes, and valets are used to redistribute the bikes. However, using external arrangement to redistribute bikes is problematic as well. Hiring workers to redistribute bikes increases the cost of the program. Moving bikes on demand with trucks and vans generates air pollution, which is against the environmentally friendly premise of a bike sharing system.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -159,78 +162,77 @@ Bikes are likely to be clustered around certain geographical areas while leaving
 \subsection{Literature Review} \label{sec:literature review}
 \subsubsection{About Citi Bike Data}
 
-Due to its novelty and the increasing importance of public bike sharing systems, a variety of work has been done related to Citi Bike. Furthermore, the management of the system gives rise to many problems, such as understanding the user behavior and rebalancing the bike volumes across stations. 
+Due to its novelty and the increasing importance of public bike sharing systems, a variety of work has been done related to Citi Bike. Furthermore, the management of the system gives rise to many interesting pieces of research, such as modeling the user behavior and rebalancing the bike volumes across stations. 
 
-Given the publicly available data, many blog posts derive data-driven analyses of Citi bike~\cite{googleCitiBikeStats}\cite{2015BicyclesInTheCity}\cite{2016CityBikeRebalanced}. Many of them consist of animation or interactive data visualization and generate descriptive analysis based on the user behavior, such as work by Schneider~\cite{schneider_2016} using the three-month data from September 2015 to November 2015. Based on graphs and regression models, this work also answers questions like \textit{how fast do Citi Bike riders tend to travel}, \textit{how accurate are Google Maps cycling time estimates} and \textit{how do age and gender impact biking speed}. 
-The visualization of station profiles and bike routes such as transfer time, the origins and destinations of rebalanced bikes is presented by combing the Citibike trip data and Open Bus data of weekday information from 2013 to 2015. Station profiles are also created by clustering stations with hourly availability.
+Given the publicly available data, many blog posts derive data-driven analyses of Citi bike~\cite{googleCitiBikeStats,2015BicyclesInTheCity,2016CityBikeRebalanced}. Many consist of animation or interactive data visualization and generate descriptive analysis based on the user behavior, such as work by Schneider using the three-month data from September 2015 to November 2015~\cite{schneider_2016}. Using graphs and regression models, this work also answers questions like \textit{how fast do Citi Bike riders tend to travel}, \textit{how accurate are Google Maps cycling time estimates} and \textit{how do age and gender impact biking speed}?
+The visualization of various system attributes such as transfer time as well as the origins and destinations of rebalanced bikes is presented by combining the Citibike trip data and Open Bus data of weekday information from 2013 to 2015. Station profiles are also created by clustering stations with hourly availability.
 
-From the perspective of operations research, \cite{o2015data} is an cooperation
-with NYC Bike Share LLC, which tackles the problem of rebalancing the system during rush-hour. Utilizing a clustering approach, the goal is to make sure that users are never too distanced for a bike or a dock. They also address the problem of moving bikes around the city overnight by generating a series of truck routes. The tools developed from their research are now in daily use within the Citi Bike System. Apart from that, Uril~\cite{urli2013balancing} provides Balancing Bike Sharing Systems problem instances which could serve as a benchmark; Faghih-Imani and Eluru~\cite{faghih2016incorporating} incorporate exogenous variables like spatial and temporal effects and consider their interaction with the arrival and departures. To better design and expand the stations, the user demand has also been studied by predicting bike demand at a macroscopic level~\cite{singhvi2015predicting}. Focusing on morning usage during weekdays of four months in 2014, the researchers consider taxi usage, weather and spatial variables to predict the demand.
+From the perspective of operations research, \cite{o2015data} is a cooperation
+with NYC Bike Share LLC, which tackles the problem of rebalancing the system during rush-hour. Utilizing a clustering approach, the goal is to make sure that users are never too distant from an available bike or a dock. They also address the problem of efficiently moving bikes around the city overnight by generating a series of truck routes. The tools developed from their research are now in daily use within the Citi Bike System. Apart from that, Uril~\cite{urli2013balancing} provides Balancing Bike Sharing Systems problem instances which could serve as benchmarks, Faghih-Imani and Eluru~\cite{faghih2016incorporating} incorporate exogenous variables like spatial and temporal effects and consider their interaction with the arrival and departures. To better design and expand the stations, the user behavior has also been studied by predicting bike demand at a macroscopic level~\cite{singhvi2015predicting}. Focusing on morning usage during weekdays of four months in 2014, the researchers consider taxi usage, weather, and spatial variables to predict the demand.
 
 
 
 \subsubsection{About Bike-Sharing System}
 
-The first bike-share program was in 1965 in Amsterdam, Europe. There have been three generations of bike-sharing systems during the past 52 years. As of June 2014, there are approximately 806,200 bicycles at 37,500 stations around 712 cities in 50 countries on five continents~\cite{wikipedia_2017}. Bike sharing has grown across the world because the social and environmental benefits that it brings. 
+The first bike-share program was in 1965 in Amsterdam, Europe. There have been three generations of bike-sharing systems during the past 52 years. As of June 2014, there are approximately 806,200 bicycles at 37,500 stations around 712 cities in 50 countries on five continents~\cite{wikipedia}. Bike sharing has grown across the world because of the social and environmental benefits that it brings. 
 
-There are mainly three generations of bike-sharing programs.~\cite{demaio2009bike} The first generation is called White Bikes or Free Bike Systems. The bikes used are ordinary unlocked bikes painted in white colors and free for use. The program fails because bikes are thrown into canals or stolen for private use. The second generation 
-Coin-Deposit System enables users to pick up and return at specific locations with a coin deposit. However, the system does not limit the time of the bicycle use, which makes that users often take bikes for long time periods. In addtion, due to the customer anonymity, the second generation bike-sharing system also has the bicycle theft issue. The third generation bike-sharing program takes care of the previous problems such as bicycle thefts and failures to return bikes by incorporating the information technology to track bicycles and user information. Additionally, Smart Technology is used for checking in/out bikes.
+There are three primary generations of bike-sharing programs~\cite{demaio2009bike}. The first generation is called White Bikes or Free Bike Systems. The bikes used are ordinary unlocked bikes painted white and free for use. These programs failed because bikes were thrown into canals or stolen for private use. The second generation 
+Coin-Deposit System enabled users to pick up and return at specific locations with a coin deposit. However, the system did not limit the time of the bicycle use, and so users often kept bikes for long time periods. In addition, due to the customer anonymity, the second generation bike-sharing system also suffered from bicycle theft. The third generation bike-sharing programs address issues such as bicycle thefts and failure to return bikes by incorporating information technology to track bicycles and user information. Additionally, Smart Technology is used for checking in/out bikes.
 
-The climate changes cause decision makers to examine the need for sustainable transportation strategies:~\cite{shaheen2010bikesharing} clean fuuels, vehicle techonologies, transportation demand management, integrated land use and transportation strategies. Bike Sharing System provides a solution that could help many of the listed issues. For example, in order to sole the "last mile" problem, Bike Sharing System offers a low-carbon solution. The "last mile" problem refers to the short distance between home and public transit and/or transit stations and the workplace. The distances might be too long to walk. Therefore, Bike Sharing System not only bridges the gap in the current public transportation network by offering people more choices, but also reduces the traffice congestion and air pollution.
+Climate change causes decision makers to examine the need for sustainable transportation strategies~\cite{shaheen2010bikesharing} clean fuels, vehicle technologies, transportation demand management, integrated land use and transportation strategies. Bike Sharing Systems provide a solution that could help many of the listed issues. For example, in order to solve the ``last mile'' problem, Bike Sharing System offers a low-carbon solution. The ``last mile'' problem refers to the short distance between home and public transit and/or transit stations and the workplace, which might be too long for people to comfortably walk. Therefore, Bike Sharing Systems not only bridge the gap in the current public transportation network by offering people more choices but also reduce the traffic congestion and air pollution.
 
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{My Contribution} \label{sec:my contribution}
-%\begin{doublespacing}
-\subsubsection{About Citibike Package}
-\begin{doublespacing}
-Extract-Transform-Load(ETL) refers to the process of extracting data from source systems and bringing it into the data warehouse.
-\pkg{citibike} is a R package based on the ETL framework to interface with NYC Citi Bike trip data.
+\subsection{My Contribution of this Thesis} \label{sec:my contribution of this thesis}
+\subsubsection{About \pkg{citibike} Package}
+
+Extract-Transform-Load (ETL) refers to the process of extracting data from source systems and bringing it into the data warehouse.
+\pkg{citibike} is a \R package based on the ETL framework to interface with NYC Citi Bike trip data.
 The package facilitates the extraction, transformation and loading process of dealing with medium data, which is usually too big
 to fit in memory on a standard laptop.
-These functionsenable the user query for a specific date range and get a populated SQL database back. All user interaction is solely within R, which faciliates ease of use.
+These functions enable the user to query for a specific date range and get a populated SQL database back. All user interaction is solely within \R, which facilitates ease of use.
 
-\pkg{citibike} inherits functions from many packages: \pkg{etl}~\cite{pkgetl}, \pkg{dplyr}~\cite{pkgdplyr}, \pkg{DBI}~\cite{pkgDBI}, \pkg{data.table}~\cite{pkgdatatable}, \pkg{lubridate}~\cite{pkglubridate}, \pkg{rvest}~\cite{pkgrvest}, \pkg{utils}~\cite{pkgutils}, \pkg{xml2}~\cite{pkgxml2}. \pkg{etl} is the parent package of \pkg{citibike}. Following the same idea, the three step process is tailored towards Citi Bike data. \pkg{dplyr} facilitates the process of working with large data that’s hard to fit in memory by conneting SQL at the back end. It also helps to automatically translate R code to SQL. Thus, users could pull a subset or aggregate from the database easily. In order to scrape the trip data from Citi Bike website, the data extraction pipeline uses \pkg{xml2} and \pkg{rvest} to locate the files and \pkg{utils} for downloading. In order to get data into the proper format, data transformation uses \pkg{lubridate} to work on time variables, and \pkg{data.table} to input and output the data files. Loading data into the final target database involves writing tables to a SQL database with \pkg{DBI}.
+\pkg{citibike} inherits functions from many packages: \pkg{etl}~\cite{pkgetl}, \pkg{dplyr}~\cite{pkgdplyr}, \pkg{DBI}~\cite{pkgDBI}, \pkg{data.table}~\cite{pkgdatatable}, \pkg{lubridate}~\cite{pkglubridate}, \pkg{rvest}~\cite{pkgrvest}, \pkg{utils}~\cite{pkgutils}, \pkg{xml2}~\cite{pkgxml2}. \pkg{etl} is the parent package of \pkg{citibike}. Following the same idea, the three step process is tailored towards Citi Bike data. \pkg{dplyr} facilitates the process of working with data too large to fit in memory by connecting a SQL database at the back end. It also helps to automatically translate \R code to SQL queries. Thus, users can easily pull a subset of the data or aggregate from the database within \R. In order to scrape the trip data from Citi Bike website, the data extraction pipeline uses \pkg{xml2} and \pkg{rvest} to locate the files and \pkg{utils} for downloading. In order to get data into the proper format, data transformation uses \pkg{lubridate} to work on time variables, and \pkg{data.table} to input and output the data files. Loading data into the final target database involves writing tables to a SQL database with \pkg{DBI}.
 
 
 
 \subsubsection{Visualization}
-\begin{doublespacing}
 
-To facilitate user exploration of this data, we alos provide exploratory analysis and an interactive visualization application built within \pkg{shiny}~\cite{pkgshiny},a web framework for building applications under R. 
-\pkg{shiny} turns the analysis results into interactive web applications without requiring HTML, CSS, or JavaScript knowledge. Using functions from: \pkg{tidyr}~\cite{pkgtidyr}, \pkg{ggplot2}~\cite{pkgggplot2}, \pkg{leaflet}~\cite{pkgleaflet}, \pkg{rgdal}~\cite{pkgrgdal}, the web application displays the
+To facilitate user exploration of this data, we also enable exploratory analysis via an interactive visualization application built within \pkg{shiny}~\cite{pkgshiny}, a web framework for interactive applications under R. 
+\pkg{shiny} turns the analysis results into interactive web applications without requiring HTML, CSS, or JavaScript knowledge. Using functions from \pkg{tidyr}~\cite{pkgtidyr}, \pkg{ggplot2}~\cite{pkgggplot2}, \pkg{leaflet}~\cite{pkgleaflet}, \pkg{rgdal}~\cite{pkgrgdal}, the web application displays the
 trip distribution information on the map along with relevant summary statistics.
 
-\end{doublespacing}
 
 
 \subsubsection{Modeling}
 
-Using the database tool, we then analyze the bike usage patterns. We investigate bike usage at different levels by aggregating the entire trip dataset to different temporals: yearly, monthly, daily and hourly. We focus our anlysis primary from the stations` pespectives. We are interested in the total number of trips and the difference between the number of bikes being taken out and returned back during a certain time range. Baseline regression models are presented, followed by the investigation into the netflow. In addtion, the clustering algorithm is adopted to 
-separate the stations by the netflow pattern into different groups: net sources, net sinks and neutural ones. These characteristics of the stations are then fed back to the initial regression model. The improvement of the model performance shows us how could we
-better understand the netflow of stations. We also present alternative model using random forests. 
+Using the database tool, we then analyze the bike usage patterns. We investigate bike usage at different levels by aggregating the entire trip dataset to different temporal resolutions: yearly, monthly, daily and hourly. We focus our analysis primarily from the station\textquotesingle s perspectives. We are interested in both the total number of trips and the difference between the number of bikes being taken out and returned during a certain time range. Baseline regression models are presented, followed by a deeper investigation into the netflow. In addition, a clustering strategy is adopted to separate the stations according to the netflow pattern into different groups: net sources, net sinks, and neutral ones. These characteristics of the stations are then fed back to the initial regression model. The improvement of the model performance shows us how we could
+better understand the netflow of stations. For robustness, we also present an alternative model using random forests. 
 
 \subsubsection{Reproducible Research}
 
 
-As we begin to place greater emphasis on statistical analysis, it is important to ensure that our results are reporducible. Authors are encouraged to make their work transparent, ranging from the raw data to the statistical analysis so that both the authors and the readers could be benefited. It makes it easier for the analysts to communicate the findings and the readers to understand the results. There have been a couple of undesirable aspects with the traditional workflow of separating the analysis and result presentation~\cite{baumer2014r}. First, the work is not reproducible because the code to generate the statistical output will not be inside the presentation. Second, the separation breaks the chronological logic of generating output. Results might be presented in an alternative order based on the purpose of the writer. However, it might be hard for readers to following the logic of the workflow. Third, the disconnect creates chance for human intervention and could result in lost of data integrity. Fourth, the copy-and-paste paradigm is susceptible to errors. In addition, Buckhiet and Donoho~\cite{buckheit1995wavelab} point out the importance of having ``the complete software development environment and complete set of instructions which generated the figures`` so that authors are not simply presenting the results. Thus, creating an easy-to-follow mechanism when conducting scientific computation is needed.
+As we begin to place greater emphasis on statistical analysis of openly available data, it is important to ensure that our results are reporducible. Authors are encouraged to make their work transparent, ranging from the raw data to the statistical analysis so that both the authors and the readers may be benefit. There have been several undesirable side effects of the traditional workflow of separating the analysis and result presentation~\cite{baumer2014r}. First, the work is not reproducible because the code to generate the statistical output will not be incuded with the presentation of the results. Second, the separation breaks the chronological logic of generating output. Results might be presented in an alternative order based on the purpose of the writer. However, it might be hard for readers to following the logic of the workflow. Third, this disconnect creates opportunity for human intervention and could result in lost of data integrity. Fourth, the copy-and-paste paradigm is susceptible to errors. In addition, Buckhiet and Donoho~\cite{buckheit1995wavelab} point out the importance of having ``the complete software development environment and complete set of instructions which generated the figures'' so that authors are not simply presenting the results. Thus, creating an easy-to-follow mechanism when conducting scientific computation is needed.
 
-Two major tools have been adopted in this project, Knitr and Github. R Markdown~\cite{xie2015dynamic} is a user-friendly system that allows technical writing to beseamlessly integrated with code.  With this functionality, a final HTML or PDF file that contains R code, graphs and computational results will be generated. Here we use R Sweave, a relative that enables R code to be executed in LaTex. Github is used to store the scripts for \pkg{citibike} and this thesis. All source code is available under the Github account of the author so that more people could access the information.
-In terms of the analysis, all the tables, figures and other output listed in this thesis have the scripts that are used to generate them included. All files are outlined in a makefile and then put together using GNU Make~\cite{gnu}, a tool which controls the generation of executables and other compiled files of a program from the program's source files. This process enables readers to clearly identify the calculation process and better understand the workflow.
+Two major tools have been adopted in this project, \pkg{Knitr} and Github. R Markdown~\cite{xie2015dynamic} is a user-friendly system that allows technical writing to beseamlessly integrated with code.  With this functionality, a final HTML or PDF file that contains R code, graphs and computational results will be generated. Here we use R Sweave, a relative that enables R code to be executed in \LaTeX. Github is used to store the scripts for \pkg{citibike} and this thesis. All source code is available under the Github account of the author so that more people could access the information.
+In terms of the analysis, all the tables, figures and other output listed in this thesis have the scripts that are used to generate them included. All files are outlined in a \var{makefile} and then put together using GNU Make~\cite{gnu}, a tool which controls the generation of executables and other compiled files of a program from the program's source files. This process enables readers to reporduce the calculation process and better understand the workflow.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+\clearpage
 \section{Citi Bike and Package} \label{sec:citibike and package}
 \input{citibike_script}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\section{Exploratory Data Analysis and Interactive Visualization} \label{sec:Exploratory Data Analysis and Interactive Visualization}
+In this section, we present results from the exploratory data analysis about the \var{trip} dataset. We investigate the datasfrom different perspectives such as bike usage, trip distribution and user information. In addition to presenting our findings, we also enable users to explore the datasets through our interactive data visualization application. We believe having an interactive tool will help users better understand the stories behind the Citi Bike dataset.
 
-\section{Exploratory Analysis and Interactive Visualization} \label{sec:Exploratory Analysis and Interactive Visualization}
-\subsection{Exploratory Analysis}
+\subsection{Exploratory Data Analysis}
+The following subsections will show our analysis about the trip distributions, station usage, bike utilization and user groups.
 \input{summary_stats}
 \input{summary_trip_distribution}
 \input{summary_stats_stations}
@@ -239,7 +241,7 @@ In terms of the analysis, all the tables, figures and other output listed in thi
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+\clearpage
 \section{Modeling} \label{sec:modeling}
 
 \input{model_regression}
@@ -252,7 +254,7 @@ In terms of the analysis, all the tables, figures and other output listed in thi
 \input{random_forest}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+\clearpage
 \input{conclusion}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

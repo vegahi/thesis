@@ -4,7 +4,7 @@ library(knitr)
 opts_chunk$set(fig.width = 10, fig.height = 5)
 @
 
-\subsubsection{Summary Statistics about Stations}
+\subsubsection{Stations}
 
 <<message = FALSE, warning = FALSE, echo = FALSE>>=
 library(citibike)
@@ -18,7 +18,13 @@ bikes <- etl("citibike", dir = "~/Desktop/citibike_data",
 
 
 Based on the \var{station ids} and the trip information, there are 662 \var{start 
-stations} and 689 \var{end stations}.
+stations} and 689 \var{end stations}. Combining the usage of the start stations and end stations, we could see that 
+the stations with smaller id numbers have been used more heavily compared to 
+those with big ones.
+Figure \ref{fig:stations_use} shows that a large number of the stations with id numbers greater
+than 2000 were later added to the system in 2015, which might explain the 
+relatively lower use.
+
 <<echo = FALSE, eval= FALSE>>=
 stations_count <- bikes %>%
   tbl("trips") %>%
@@ -32,13 +38,7 @@ stations_count <- readRDS("stations_count.rds")
 @
 
 
-Combining the usage of the start stations and end stations, we could see that 
-the stations with smaller id numbers have been used more heavily compared to 
-those with big ones.
 
-The next graph shows that a large number of the stations with id numbers greater
-than 2000 were later added to the system in 2015, which might explain the 
-relatively less use.
 
 <<echo = FALSE, eval= FALSE, warning = FALSE>>=
 stations_use <- bind_rows(
@@ -64,7 +64,7 @@ stations_use <- readRDS("stations_use.rds")
 @
 
 
-<<stations_use, echo=FALSE, fig.cap="The total trip distribution per station", warning= FALSE>>=
+<<stations_use, echo=FALSE, fig.cap="The total trip distribution per station. We could see from the graph that the stations with ID numbers greater than 2000 are less heavily used. These stations were added to the system in 2015.", warning= FALSE>>=
 stations_use <- stations_use %>%
   gather(key = type, value = station_id, -count) %>%
   select(count, station_id) %>%
@@ -72,7 +72,9 @@ stations_use <- stations_use %>%
   summarise(total_count = sum(count))
 ggplot(data = stations_use, aes(x = station_id, y = total_count)) + 
   geom_bar(stat = "identity") + 
-  labs(list(x = "Station ID", y = "Total Number of Trips"))
+  labs(list(x = "Station ID", y = "Total Number of Trips")) +
+  theme_bw() +
+  theme(legend.position = "none")
 @
 
 

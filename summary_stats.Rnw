@@ -6,11 +6,11 @@ library(htmlwidgets)
 opts_chunk$set(fig.width = 10, fig.height = 5)
 @
 
-\subsubsection{Summary Statistics about Trips}
+\subsubsection{Trips}
 
-All the analysis are based on the data up until 2016 December.
 
-<<message = FALSE, warning = FALSE>>=
+
+<<message = FALSE, warning = FALSE, echo= FALSE>>=
 library(citibike)
 library(lubridate)
 library(ggplot2)
@@ -21,20 +21,21 @@ bikes <- etl("citibike", dir = "~/Desktop/citibike_data",
              db = src_mysql_cnf("citibike", groups = "scidb"))
 @
 
-In the \var{trips} dataset, 15 variables are extracted from the original data and the last 
-\var{variable} weekday is added to indicate the index of the day in a week for 
+All the analysis are based on the data up until 2016 December. 
+In the \var{trips} dataset, 15 variables were extracted from the original data and addtional 
+variable \var{weekday} was added to indicate the index of the day in a week for 
 the given the start time of the trips, where 0 for Monday, 1 for Tuesday and 6 
-for Sunday.
+for Sunday. We aggregated by station pairs and find that the top four popular routes are round trips near central park area. Figure \ref{fig:popular-stations} shows the stations that are shown in the top ten most popular trip pairs.
 
-<<>>=
+<<eval = FALSE, echo= FALSE>>=
 bikes %>%
   tbl("trips") %>%
   head(n = 2) 
 @
 
-We aggregate the trips by station pairs and find that the top four popular route are round trips near central park area. As shown in the figure, we plot the stations that are shown in the top ten popular trip pairs. (Figure \ref{fig:popular-stations}) 
 \begin{figure}
-  \includegraphics[width=\textwidth]{popular_stations.png}
+  \centering
+  \frame{\includegraphics[width=0.7\textwidth]{popular_stations.png}}
   \caption{The stations in the first ten popular routes. We notice that the top four popular route are round trips near central park area }
   \label{fig:popular-stations}
 \end{figure}
@@ -61,7 +62,7 @@ popular_stations
 @
 
 
-<< eval = FALSE, echo = FALSE>>=
+<<eval = FALSE, echo = FALSE>>=
 leaflet() %>%
   addTiles() %>%
   addCircles(~longitude_avg, ~latitude_avg, color = "red", radius = 60, 
