@@ -1,0 +1,394 @@
+---
+title: "Thesis Presentation"
+author: "Weijia Zhang (Vega)"
+output:
+  rmdshower::shower_presentation:
+    self_contained: false
+    katex: true
+    ratio: 16x10
+---
+
+##Improving the Open-Source New York City Bike Sharing System (Citi Bike)
+
+Weijia Zhang (Vega)
+
+Submitted to the Program in Statistical & Data Sciences (SDS)
+
+May.1.2017
+
+
+
+## Outline
+* Motivation
+* How Bike Sharing System Evolved?
+* My Contribution
+    + Citi Bike and Package
+    + Exploratory Analysis and Interactive Visualization
+    + Modeling
+* Future Work
+* Conclusion
+
+## First Mile/ Last Mile Problem
+<img src="fmlm.png" class="cover">
+
+## Other Problems
+<p class="double">
+<img src="nyctraffic.jpg" class="one-col-image" width="200" height="236">
+<img src="airpollution.jpg" class="one-col-image" width="200", height="236">
+</p>
+
+## Solution
+<img src="letusshare.png" class="cover">
+
+## 1.0 White Bikes or Free Bike Systems (1965)
+<p class="double">
+<img src="whitebikes.jpg" class="one-col-image">
+<img src="white_bikes2.jpg" class="one-col-image">
+</p>
+
+## 2.0 Coin-Deposit Systems
+<img src="coinbikes.jpg" class ="cover">
+
+## 3.0 Modern Bike Sharing Systems
+<p class="double">
+information technology:
+
+bikes and user information & check in/ out bikes
+<img src="modernbikes.jpeg" class="one-col-image">
+</p>
+
+## Citi Bike
+<img src="logo.png" class="cover">
+
+## About Citi Bike
+<p class="double">
+6,000 bikes and 332 stations
+
+System expansion in August 2015 doubled the fleet to 12,000 bikes and added 140 new stations.
+<img src="citibike.jpg" class="one-col-image" width="200" height="230">
+</p>
+
+## About Citi Bike
+<img src="unlock.png" class="cover">
+
+## About Citi Bike: Real Time Data
+<p class="double">
+<img src="citibike_app.jpeg" class="one-col-image" width="200" height="436">
+<img src="citibike_data.png" class="one-col-image" width="200" height="236">
+</p>
+
+## Major Problems of Citi Bike
+<p class="double">
+<img src="maintenence.jpeg" class="one-col-image" width="200" height="236">
+<img src="balancing.jpg" class="one-col-image" width="200" height="236">
+</p>
+
+## Studies About Citi Bike
+* blog posts
+    + How fast do Citi Bike riders tend to travel?
+    + How do age and gender impact biking speed?
+* operations research:
+    + Tackles the problem of rebalancing the system during rush-hour. 
+    + The goal is to make sure that users are never too distant from an available bike or a dock.
+    + Efficiently moving bikes around the city overnight by generating a series of truck routes.
+
+## My Contribution
+* citibike R package
+* visualiazation
+* priliminary analysis
+* reproducible research (source code available on Github)
+
+# citibike package
+
+## Problem No.1: I can't fit all the data into R.
+<p class="double">
+<img src="data_files.png" class="one-col-image" width="200" height="436">
+<img src="RDatabase.png" class="one-col-image" width="200" height="236">
+(7.03 GB on disk) for 43 items
+</p>
+
+## Problem No.2: I can't use the data.
+<p class="double">
+<img src="201412.png" class="one-col-image" width="236" height="200">
+<img src="201501.png" class="one-col-image" width="236" height="200">
+</p>
+
+
+## Our Solution: ETL citibike
+```{r, message = FALSE, eval=FALSE}
+# load the packages
+library(citibike)
+# example local directory on desktop 
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", 
+             db = src_mysql_cnf("citibike", groups = "scidb"))
+bikes <- bikes %>%
+  etl_extract(years = 2013:2016, months = 1:12) %>%
+  etl_transform(years = 2013:2016, months = 1:12) %>%
+  etl_load(years = 2013:2016, months = 1:12)
+
+```
+
+
+# Exploratory Analysis and Interactive Visualization
+
+## Some Starting Questions 
+* How many trips do we have each year?
+* How does the trip distribution look like across months?
+* What are the popular stations?
+* What are the popular trip routes?
+* Do we know anything about our users?
+
+
+## Trip Distribution by Year
+```{r, warning = FALSE, message= FALSE, echo = FALSE}
+library(citibike)
+library(lubridate)
+library(ggplot2)
+library(leaflet)
+trip_vol_year <- readRDS("trip_vol_year.rds")
+ggplot(data = trip_vol_year, aes(year, total_trip, fill = rev(total_trip))) +
+  geom_bar(stat = "identity") +
+  labs(list(x = "Year", y = "Total Number of Trips")) +
+  geom_text(data = trip_vol_year,aes(x = year,y = total_trip, 
+                                   label = total_trip), vjust = 0) +
+  theme_bw() +
+  theme(legend.position = "none")
+```
+
+
+## Trip Distribution across Months
+```{r, warning = FALSE, echo = FALSE}
+trip_vol_month <- readRDS("trip_vol_month.rds")
+ggplot(data = trip_vol_month, aes(month, total_trip, color = rev(total_trip))) + 
+  geom_line() + facet_wrap(~ year) +
+  labs(list(x = "Month", y = "Total Number of Trips")) +
+  theme_bw() +
+  scale_x_continuous(breaks = 1:12)+
+  theme(legend.position = "none")
+```
+
+## The Top 10 Popular Stations
+```{r,  echo = FALSE, message= FALSE}
+# example local directory on desktop 
+bikes <- etl("citibike", dir = "~/Desktop/citibike_data", 
+             db = src_mysql_cnf("citibike", groups = "scidb"))
+popular_stations <- bikes %>%
+  tbl("master_stations") %>%
+  filter(ID %in% c (519,497,435,426,293,285,402,521,151,294)) %>%
+  collect()
+```
+
+```{r, echo = FALSE, dev='svg', message= FALSE}
+leaflet() %>%
+  addTiles() %>%
+  addCircles(~longitude_avg, ~latitude_avg, color = "red", radius = 60, 
+             data = popular_stations, fillOpacity = 0.8) %>%
+  addCircleMarkers(~longitude_avg, ~latitude_avg, label = ~station_name, 
+                   data = popular_stations, 
+                   labelOptions = labelOptions(noHide = T, 
+                                               direction = 'top', textOnly = T))
+
+```
+
+
+
+# Interactive Visualization: Shiny
+
+## Shiny
+Link the video here.
+
+# Preliminary Analysis
+
+## Understand Use Behavior
+<img src="users.jpg" class="cover">
+
+## Modeling
+* Total Traffic: the sum of the number of bikes going out and coming in during a certain time range.
+* Netflow: the difference between the number of bikes coming out from a station and the number of
+bikes returning back to that station.
+
+
+## Variables:
+* Response Variables:
+    + total traffic: 
+    + netflow
+* Explanatory Variables:
+    + year
+    + month
+    + day
+    + Weekday
+    + Station ID
+
+## Baseline Regression Models for Total Traffic:
+\[ volume_{year} = \beta_{0} + \alpha*year + \theta*ID + \varepsilon  \]
+\[ volume_{month}= \beta_{0} + \alpha*year + \gamma* month + \theta*ID + \varepsilon \]
+\[ volume_{day} = \beta_{0} + \alpha*year + \gamma* month + \delta* day + \theta*ID + \varepsilon \]
+\[ volume_{day} = \beta_{0} + \alpha*year + \gamma* month + weekday + \theta*ID + \varepsilon \]
+where \[\alpha \in \mathbb{R}^{4}, \gamma \in \mathbb{R}^{12}, \delta \in \mathbb{R}^{365} \theta \in \mathbb{R}^{662}, weekday \in \big\{0,1\big\}, \varepsilon \sim N(0, \sigma_{\varepsilon})\]
+
+## Baseline Regression Model Results (Total Traffic)
+|                   |  Year Data | Month Data  |  Day Data  |  Day Data  |
+|:-----------------:|:-----:|:-----:|:------:|:----:|
+|     # Records    | 1800    |   16821  |  494911   | 494911  |
+| ID | x  | x | x | x |
+|   year   | x    |   x   |   x  | x  |
+|    month |      | x  |  x   |   x  |
+|   day |  |      |  x   | |
+| weekday |  |      |   | x  |
+|       R Square     | 0.8942  |   0.8296   |  0.6877 | 0.6971  |
+|      RMSE   | 11772.46 |   1568.93   |  77.71 | 777.52  |
+
+## Baseline Regression Models for Net Traffic:
+\[ net_{year} = \beta_{0} + \alpha*year + \theta*ID + \varepsilon \]
+\[ net_{month}= \beta_{0} + \alpha*year + \gamma* month + \theta*ID + \varepsilon \]
+\[ net_{day} = \beta_{0} + \alpha*year + \gamma* month + \delta* day + \theta*ID + \varepsilon \]
+\[ net_{day} = \beta_{0} + \alpha*year + \gamma* month + weekday + \theta*ID + \varepsilon \]
+where \[\alpha \in \mathbb{R}^{4}, \gamma \in \mathbb{R}^{12}, \delta \in \mathbb{R}^{365} \theta \in \mathbb{R}^{662}, weekday \in \big\{0,1\big\}, \varepsilon \sim N(0, \sigma_{\varepsilon})\]
+
+## Baseline Regression Model Results (Netflow)
+|                   |  Year Data | Month Data  |  Day Data  |  Day Data  |
+|:-----------------:|:-----:|:-----:|:------:|:----:|
+|     # Records    | 1800    |   16821  |  494911   | 494911  |
+| ID | x  | x | x | x |
+|   year   | x    |   x   |   x  | x  |
+|    month |      | x  |  x   |   x  |
+|   day |  |      |  x   | |
+| weekday |  |      |   | x  |
+|       R Square     | 0.6324  |   0.4356   |  0.1625| 0.1625  |
+|      RMSE   | 112.517 |   176.9242   |  12.3269 | 12.3269  |
+
+## Why the Regression Model Fails?
+
+```{r, echo = FALSE, message= FALSE}
+trip_netflow_day <- readRDS("trip_netflow_day")
+ggplot(trip_netflow_day, aes(x =netflow)) + geom_density()+
+    theme_bw() 
+```
+
+## Cauchy Distribution
+pdf:\[ \frac{1}{\pi\gamma(1+(\frac{x-x_0}{\gamma})^2)} \]
+cdf:\[\frac{1}{\pi}\arctan(\frac{x-x_0}{\gamma}) + \frac{1}{2}\]
+\[x_0 = \bar{x}, \gamma >0\]
+
+## Fitting with Cauchy Distribution
+```{r, message= FALSE, echo= FALSE}
+plot_function <- function(data, a){
+  x <- data$netflow
+  q <- min(x):max(x)
+  q1 <- 1/(pi*a*(1+((q-mean(x))/a)^2))
+  test <- as.data.frame(cbind(q, q1))
+  ggplot(data, aes(x = netflow)) + 
+    geom_density() + 
+    geom_line(data = test, aes(x = q, y = q1),linetype = 2, color = "red") 
+}
+plot_function(trip_netflow_day, 4.312)
+```
+
+## Nonparametric Method: K-means Clustering
+
+\[\sum^K_{k=1} \sum_{i\in c_k} || x_i - m_k ||^2 \]
+
+
+## Clustering Results
+```{r, echo = FALSE, message= FALSE}
+trip_netflow_day_avg <- trip_netflow_day %>%
+  group_by(ID) %>%
+  summarise(avg_netflow = mean(netflow))
+
+# finding the optimal number of cluster size
+cluster_size <- 1:10
+sofss <- rep(0,10)
+cluster_results <- as.data.frame(cbind(cluster_size, sofss))
+for (i in 1:10){
+  # use nstart greater than one to have multiple random assignments
+  # aviod getting undesirable local optimum and only report the best results
+  km.out <- kmeans(trip_netflow_day_avg[,2], centers = i, nstart = 20)
+  cluster_results[i,2] <- km.out$tot.withinss
+}
+ggplot(data = cluster_results, aes(x = cluster_size, y = sofss)) + geom_line() +
+ scale_x_continuous(breaks = seq(1, 10, by = 1)) + 
+  geom_point(aes(x = 3, y = 8277.674, color = "red", size = 5)) +
+  geom_point(aes(x = 6, y = 2394.328, color = "red", size = 5)) +
+  theme(legend.position="none") +
+   labs(list(x = "the size of K", 
+             y = "the total within-cluster sum of squares"))
+```
+
+## Random Forests vs Regression Models for Daily Netflow Data
+|   Gender | RF No ID| Regression No ID|RF 6 clusters| Regression 6 Clusters| Regression All IDs|
+|:--------:|:------------:|:------------:|:------------:|:------------:|:------------:|
+|   variation explained | <0.001 |<0.001| 0.1342  | 0.1443 | 0.1625|
+|   RMSE   |  13.47| 13.47| 12.53  | 12.46 | 12.33|
+
+## Future Work
+* Netflow Distribution
+* Cross Validation
+* Outside Data Sources
+
+## Conclusion
+* R package
+* Visualization
+* Preliminary Analysis and Modeling
+* Reproducibility
+<p class="white">
+Get it from GitHub: https://github.com/beanumber/citibike and https://github.com/vegahi/thesis
+</p>
+
+
+## Acknowledgements
+I would like to thank, 
+
+* My honor thesis advisors
+    + Ben Baumer
+    + R. Jordan Crouser
+* SDS faculties
+* All the friends
+
+## References
+
+## Thank You
+
+<img src="thankyou.png" class="cover">
+
+
+## top 10 most popular trip pairs
+|Start|  Start_Staion_Name    |End |  End_Station_Name     |trip_volume|
+|:---:|:---------------------:|:--:|:---------------------:|:---------:|
+|2006 |Central Park S & 6 Ave |2006|Central Park S & 6 Ave |486,85     |
+|281  |Grand Army Plaza       |281 |Grand Army Plaza       |18,960     |
+|499  |Broadway & W 60 St     |499 |Broadway & W 60 St     |17,049     |
+|387  |Centre St & Chambers St|387 |Centre St & Chambers St|14,959     |
+|514  |12 Ave & W 40 St       |426 |West St & Chambers St  |13,245     |
+|435  |W 21 St & 6 Ave        |509 |9 Ave & W 22 St        |13,150     |
+|519  |Pershing Square North  |492 |W 33 St & 7 Ave        |12,321     |
+|426  |West St & Chambers St  |426 |West St & Chambers St  |11,116     |
+|519  |Pershing Square North  |477 |W 41 St & 8 Ave        |11,043     |
+|435  |W 21 St & 6 Ave        |462 |W 22 St & 10 Ave       |11,031     |
+
+## User Type Breaking Down
+|   User Type  |    count    |
+|:------------:|:-----------:|
+|   NA         |    35,871   |
+|   Customer   |  4,279,839  |
+|   Subscriber | 32,586,315  |
+
+## User Gender information
+|   Gender |     count    |
+|:--------:|:------------:|
+|   unknow |   4,405,563  |
+|   male   |  24,818,829  |
+|   female |  7,677,633   |
+
+## User Birh Year 
+```{r, echo= FALSE, out.width= "600cm", out.height="400cm"}
+birth_year <- readRDS("birth_year.RData")
+birth_year <- birth_year %>%
+  filter(Birth_Year >= 1913)
+ggplot(data = birth_year, aes(x = Birth_Year, y = count)) + 
+  geom_bar(stat = "identity") +
+  labs(list(x = "Year of Birth", y = "Total Number of Users Born in the Year"))+
+  theme_bw() +
+  theme(legend.position = "none")
+```
+
+
